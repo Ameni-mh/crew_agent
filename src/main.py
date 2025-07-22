@@ -6,7 +6,7 @@ from crewai import  Crew, Process
 import agentops
 from config.config import settings
 from Agent.extarct_field import search_queries_recommendation_agent, Extract_filed_task, missing_filed_task
-
+import json
 
 app = FastAPI()
 
@@ -50,10 +50,12 @@ async def welcome(query: str):
 
     })
 
+    result = json.dumps(crew_results)
+
     return JSONResponse(
             content={
                 "signal": "success",
-                "result": crew_results if crew_results else "No results found",
+                "result": result if result else "No results found",
             }
         )
 
