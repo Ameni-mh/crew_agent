@@ -2,7 +2,7 @@ from crewai import Agent, Task, Crew, Process, LLM
 from crewai.tools import tool
 from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
 import agentops
-
+from langdetect import detect
 from pydantic import BaseModel, Field
 from typing import List
 from config.config import settings
@@ -18,16 +18,25 @@ basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
 output_dir = "./ai-agent-output"
 os.makedirs(output_dir, exist_ok=True)
 
+
+@tool
+def detect_language_tool(message: str):
+      """
+      Detect the user's language from a message using LLM.
+      """
+      return detect(message)
+
+
 search_queries_recommendation_agent = Agent(
     role="Field Extractor",
     goal="\n".join([
         "You are a multilingual AI travel assistant designed to extract structured hotel search information from a user's message.",
-        "You can understand and process messages in multiple languages.",
-        "If any required fields are missing, you detect them and respond appropriately."
+        "Respond with the detected language.",
     ]),
     backstory="This agent specializes in parsing hotel search requests from users, identifying key information such as city, travel dates, and preferences. If some required fields are missing, the agent politely asks the user for the missing details.",
     llm=basic_llm,
     verbose=True,
+    tools=[detect_language_tool],
     
     
 )
