@@ -1,2 +1,2 @@
 # crew_agent
-hotel agen
+hotel agent
