@@ -50,7 +50,7 @@ async def welcome(query: str):
 
     })
 
-    result = json.dumps(crew_results)
+    result = crew_results.to_dict()
 
     return JSONResponse(
             content={
