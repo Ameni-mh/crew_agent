@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     # Environment
     openai_api_key: str = Field(alias="OPENAI_API_KEY")
-    agentops_api_key: int = Field( alias="AGENTOPS_API_KEY")
+    agentops_api_key: str = Field( alias="AGENTOPS_API_KEY")
     
 
     

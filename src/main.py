@@ -4,8 +4,8 @@ from fastapi.responses import JSONResponse
 from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
 from crewai import  Crew, Process
 import agentops
-from src.config.config import settings
-from src.Agent.extarct_field import search_queries_recommendation_agent, Extract_filed_task, missing_filed_task
+from config.config import settings
+from Agent.extarct_field import search_queries_recommendation_agent, Extract_filed_task, missing_filed_task
 
 
 app = FastAPI()

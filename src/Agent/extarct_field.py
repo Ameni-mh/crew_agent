@@ -5,7 +5,7 @@ import agentops
 
 from pydantic import BaseModel, Field
 from typing import List
-from src.config.config import settings
+from config.config import settings
 
 
 
