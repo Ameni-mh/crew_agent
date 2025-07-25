@@ -38,6 +38,10 @@ class HotelSearchRequest(BaseModel):
     rating: int  = Field(None, description="Hotel rating filter")
     user_type: str  = Field(None, description="")
 
+    model_config = {
+        "populate_by_name": True,
+        "extra": "forbid"
+    }
 
     @model_validator(mode="before")
     def validate_dates(cls, values):

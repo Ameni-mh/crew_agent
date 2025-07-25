@@ -1,16 +1,9 @@
-from crewai import Agent, Task, Crew, Process, LLM
+from crewai import Agent, Task,  LLM
 from crewai.tools import tool
-from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
-import agentops
 from langdetect import detect
-from pydantic import BaseModel, Field
-from typing import List
 from config.config import settings
-
-
-
 import os
-import json
+
 
 from schema.hotel_details_request_schema import HotelSearchRequest
 
@@ -37,7 +30,6 @@ search_queries_recommendation_agent = Agent(
     llm=basic_llm,
     verbose=True,
     tools=[detect_language_tool],
-    
     
 )
 

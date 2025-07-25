@@ -18,7 +18,7 @@ base_router = APIRouter(
 @base_router.post("/")
 async def welcome(query: str):
 
-    about_company = "Rankyx is a company that provides AI solutions to help websites refine their search and recommendation systems."
+    about_company = "Vialink is a company that provides AI solutions to help websites refine their search and recommendation systems."
 
     company_context = StringKnowledgeSource(
         content=about_company
