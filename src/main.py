@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import FastAPI, APIRouter
 from fastapi.responses import JSONResponse
 from langchain.agents import tool
@@ -17,7 +18,7 @@ async def welcome(query: str):
     
   
    
-    result = agent_executor.invoke({"input": query})
+    result = agent_executor.invoke({"input": query, "today_date": date.today()})
 
     return JSONResponse(
             content={
