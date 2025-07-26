@@ -1,86 +1,86 @@
-from crewai import Agent, Task,  LLM
-from crewai.tools import tool
-from langdetect import detect
+import json
+from typing import List
 from config.config import settings
-import os
-
-
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain_openai import ChatOpenAI
+from langchain.agents import tool
+from langchain_core.prompts import BasePromptTemplate
+from langchain_core.prompts import PromptTemplate
+from langchain import hub
+from langchain_core.tools import BaseTool
 from schema.hotel_details_request_schema import HotelSearchRequest
+from langchain.memory import ConversationBufferMemory
+from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator, validate_field_tool
 
-basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
-output_dir = "./ai-agent-output"
-os.makedirs(output_dir, exist_ok=True)
-
-
-@tool
-def detect_language_tool(message: str):
-      """
-      Detect the user's language from a message using LLM.
-      """
-      return detect(message)
-
-
-search_queries_recommendation_agent = Agent(
-    role="Field Extractor",
-    goal="\n".join([
-        "You are a multilingual AI travel assistant designed to extract structured hotel search information from a user's message.",
-        "Respond with the detected language.",
-    ]),
-    backstory="This agent specializes in parsing hotel search requests from users, identifying key information such as city, travel dates, and preferences. If some required fields are missing, the agent politely asks the user for the missing details.",
-    llm=basic_llm,
-    verbose=True,
-    tools=[detect_language_tool],
-    
-)
+basic_llm = ChatOpenAI(model="gpt-4o", temperature=0.0, api_key=settings.openai_api_key)
+# First, fix the tools list initialization
+tools_list: List[BaseTool] = [
+    detect_language_tool,
+    validate_field_tool,
+    search_hotels_from_GDSAgregator
+]
+tool_names = [tool.name for tool in tools_list]
+tools = [tool.description  for tool in tools_list]
 
 
-Extract_filed_task = Task(
-    description="""
-    TODAY is {today}.
-    Extract structured hotel search data from the user's message.
+base_prompt = "\n".join([
+    "To day is {today_date}", 
+    "You are a professional multilingual AI travel assistant specialized in hotel bookings.",
+    "Core Responsibilities:",
+    "1. Extract and validate hotel search requirements from user messages",
+    "2. Generate and validate a JSON object following the Pydantic HotelSearchRequest schema:",
+    json.dumps(HotelSearchRequest.model_json_schema(), indent=2, ensure_ascii=False),
+    "",
+    "Process Flow:",
+    "1. Parse user input and extract search criteria",
+    "2. Generate JSON matching HotelSearchRequest schema (use defaults for missing non-required fields)",
+    "3. Validate extracted data using `validate_field_tool`",
+    "4. If validation fails:",
+    "   - Politely request missing or invalid information from user",
+    "   - Maintain context of previously valid fields",
+    "5. If validation succeeds:",
+    "   - Execute search using `search_hotels_from_GDSAgregator`",
+    "   - Analyze results and recommend best matches",
+    "6. Handle language preferences:",
+    "   - Use `detect_language_tool` when specific language is requested",
+    "   - Respond in detected language",
+    "",
+    "Response Format:",
+    "Question: the input question you must answer",
+    "Thought: you should always think about what to do",
+    "Action: the action to take, should be one of [{tool_names}]",
+    "Action Input: the input to the action",
+    "Observation: the result of the action",
+    "... (this Thought/Action/Action Input/Observation can repeat N times)",
+    "Thought: I now know the final answer",
+    "Final Answer: the final answer to the original input question"
+    "",
+    "Begin!",
+    "Question: {input}",
+    "Thought:{agent_scratchpad}"
+])
 
-    Rules:
-    - All dates must be in DD-MM-YYYY format.
-    - Convert nationality to its ISO 3166-1 alpha-2 country code (e.g., "TN" for Tunisia).
-    - Convert language to its ISO 639-1 code (e.g., "en" for English, "fr" for French).
-    - Convert currency to its ISO 4217 code (e.g., "USD" for US dollars, "EUR" for euros, "PHP" for Philippine pesos).
-    - f the user says phrases like **"no children"**, **"no childs"**, **"without children"**, set `"childs": 0` in the output JSON.
-    - If a required field is missing, do not guess or hallucinate values.
-    - If 'childs' > 0, 'child_age' must be between 0 and 18 else 'child_age' = 0.
-    - If more than one child age is provided, return only the highest age (e.g., for "children aged 10, 7, and 5", set "child_age": 10)
-    - Only include fields in the output if they are provided or can be inferred with certainty.
-    - Do not return empty or null values for fields that are not provided.
 
-   
 
-    Message: {message}
-    """,
-    expected_output="A JSON object containing a list of extracted information.",
-    output_json=HotelSearchRequest,
-    output_file=os.path.join(output_dir, "step_1_suggested_Extraction_data.json"),
-    agent=search_queries_recommendation_agent
-)
 
-missing_filed_task = Task(
-    description= """
-      Your task is to verify whether the user's message contains all the required fields for initiating a hotel search.
+prompt = PromptTemplate(template=base_prompt,
+                        input_variables=["input", "today_date"],
+                        partial_variables={"tool_names": ", ".join(tool_names)})
 
-      The required fields are:
-      - City (destination)
-      - Check-in date
-      - Check-out date
+lookup_hotels_agent = create_react_agent(llm = basic_llm, tools=tools_list, prompt=prompt)
 
-      If any of these fields are missing or if the message contains invalid values (e.g., an unrecognized city). Ensure your reply:
-      - Is conversational and polite.
-      - Avoids repeating or confirming already provided details.
-      - Uses the same language as the user's input (language is detected by a tool).
-      - Is suitable for a multilingual travel assistant helping users with hotel bookings.
 
-      Do not proceed with any hotel search or confirmation. Your only goal is to validate and collect all required fields.
-      """,
-    expected_output="A natural language message that politely asks the user to provide the missing fields.",
-    output_file=os.path.join(output_dir, "step_1_task2_missing_filed.json"),
-    agent=search_queries_recommendation_agent
-)
+
+agent_executor = AgentExecutor(
+        agent=lookup_hotels_agent,
+        tools=[tool],
+        verbose=True,
+        handle_parsing_errors=True,
+        max_iterations = 5, 
+        )
+
+
+
+
 
 

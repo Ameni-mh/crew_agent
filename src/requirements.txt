@@ -3,3 +3,6 @@ uvicorn[standard]
 pydantic-settings
 crewai[tools,agentops]==0.114.0
 langdetect
+openai
+langchain
+langchain-openai
