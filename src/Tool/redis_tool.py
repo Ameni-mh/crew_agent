@@ -248,6 +248,8 @@ async def mark_rooms_selected(
 
 @tool
 async def get_all_rooms_from_key(convo_id: str):
+    """
+    Retrieve all available rooms for a selected hotel from Redis."""
     try:
         if not convo_id:
             return "Invalid input 'convo_id', must be provided."
@@ -257,12 +259,12 @@ async def get_all_rooms_from_key(convo_id: str):
 
         # Check if data exists and is in expected format
         if not rooms or not isinstance(rooms, list) or len(rooms) == 0:
-            return None
+            return "No rooms found for this conversation."
 
         room_list = rooms[0]
 
         if not isinstance(room_list, list) or len(room_list) == 0:
-            return None
+            return "No rooms found."
 
         return "\n".join(room_list)
 

@@ -4,7 +4,7 @@ from datetime import datetime
 from langdetect import detect
 import httpx
 
-from src.schema.hotel_search_request_schema import HotelSearchRequest
+from schema.hotel_search_request_schema import HotelSearchRequest
 
 @tool
 def validate_field_tool(llm_data_extracted: dict):

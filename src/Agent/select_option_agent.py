@@ -2,17 +2,15 @@ import json
 from crewai import Agent, Task,  LLM
 from config.config import settings
 import os
-from src.Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_room_search_payload_from_key, get_selected_rooms_from_key, is_selected_option_from_key, save_hotel_search_options, save_hotelDetails_room_options
-from src.schema.hotel_search_request_schema import HotelSearchRequest
+from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_room_search_payload_from_key, get_selected_rooms_from_key, is_selected_option_from_key, save_hotel_search_options, save_hotelDetails_room_options
+from schema.hotel_search_request_schema import HotelSearchRequest
 from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator, validate_field_tool
 basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
 output_dir = "./ai-agent-output"
 os.makedirs(output_dir, exist_ok=True)
 
 
-
-
-search_queries_recommendation_agent = Agent(
+Hotel_selector_room_booking_agent = Agent(
     role="Hotel Selector and room booking",
     goal="\n".join([
         "You are a helpful and multilingual AI assistant specialized in hotel selection and room booking.",
@@ -34,26 +32,41 @@ search_queries_recommendation_agent = Agent(
 )
 
 
-Extract_filed_task = Task(
+Hotel_selector_room_booking_task = Task(
     description="\n".join([
     "Core Responsibilities:",
-    "1. Extract and validate hotel search requirements from user messages",
-    "2. Generate and validate a JSON object following the Pydantic HotelSearchRequest schema:",
-    json.dumps(HotelSearchRequest.model_json_schema(), indent=2, ensure_ascii=False),
+    " Follow the logic below to interact with the user, detect their intentions, and respond with appropriate room and hotel booking information.",
     "",
     "Process Flow:",
-    "1. Parse user input and extract search criteria",
-    "2. Generate JSON matching HotelSearchRequest schema (use defaults for missing non-required fields)",
-    "3. Validate extracted data using `validate_field_tool`",
-    "4. If validation fails:",
-    "   - Politely request missing or invalid information from user",
-    "   - Maintain context of previously valid fields",
-    "5. If validation succeeds:",
-    "   - Execute search using `search_hotels_from_GDSAgregator`",
-    "   - Analyze results and recommend best matches",
-    "   - Save search options using `save_hotel_search_options`",
+    "- You need user id {user_id} and {convo_id} to interact with the hotel details and room options.",
+    "- Analyze the user's input to detect if they are selecting a hotel option or a room option.",
+    "",
+    "- If the user selects a hotel option:",
+    "   1. Change the status of the selected hotel option to 'selected' using `change_option_status_hotel_offer`.",
+    "   2. Detect the selected hotel option using `is_selected_option_from_key` and extract the hotel ID.",
+    "   3. Get the room_search_payload detail with `get_room_search_payload_from_key`."
+    "   4. use the following pydantic model to get the hotel details and room options from Gds.",
+    json.dumps(HotelSearchRequest.model_json_schema(), indent=2, ensure_ascii=False),
+    "   5 . Call `search_details_specific_hotel` to get the hotel details and room options.",
+    "   6. Save the hotel details and room options using `save_hotelDetails_room_options`.",
+    "   7. Return a summary of the available room options.",
+    "",
+    "- If the user want to selects a room option:",
+    "   1. Extract this option and and number of selected "
+    "   2. Mark this option selected using `mark_rooms_selected`",
+    "   2. return a polite message to user.",
+    "",
+    "- If the user requests to see all available rooms for a selected hotel:",
+    "   1. Retrieve all available rooms using `get_all_rooms_from_key`.",
+    "   2. Return a summary of the available room options.",
+    "",
+    "- If the user requests to see their selected room options:",
+    "    Retrieve the selected room options using `get_selected_rooms_from_key`.",
+    "",
+    "If the user want to confirm option selected : use `send_shortlink_request_hotelBooking`"
+    
     "6. Handle language preferences:",
-    "   - Use `detect_language_tool` when specific language is requested",
+    "   - Use `detect_language_tool` for language detection from user input.",
     "   - Respond in detected language",
     "",
     "Response Format:",
@@ -71,6 +84,6 @@ Extract_filed_task = Task(
     "Thought:"
 ]),
     expected_output="A natural, friendly language message ",
-    output_file=os.path.join(output_dir, "step_1_suggested_Extraction_data.json"),
-    agent=search_queries_recommendation_agent
+    output_file=os.path.join(output_dir, "hotel_selector_output.json"),
+    agent=Hotel_selector_room_booking_agent
 )
