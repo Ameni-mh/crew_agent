@@ -5,8 +5,8 @@ from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSourc
 from crewai import  Crew, Process
 import agentops
 from config.config import settings
-from Agent.extarct_field import search_queries_recommendation_agent, Extract_filed_task, missing_filed_task
-import json
+from Agent.lookup_hotels import search_queries_recommendation_agent, Extract_filed_task
+from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator, validate_field_tool
 
 app = FastAPI()
 
@@ -24,6 +24,14 @@ async def welcome(query: str):
         content=about_company
     )
 
+    tools_list = [
+        detect_language_tool,
+        validate_field_tool,
+        search_hotels_from_GDSAgregator
+    ]
+    tool_names = [tool.name for tool in tools_list]
+    tools = [tool.description  for tool in tools_list]
+
     agentops.init(
     api_key=settings.agentops_api_key,
     skip_auto_end_session=True,
@@ -36,17 +44,15 @@ async def welcome(query: str):
     ],
     tasks=[
         Extract_filed_task,
-        missing_filed_task
-
-
-    ],
+        ],
     process=Process.sequential,
     knowledge_sources=[company_context]
 )
     crew_results = rankyx_crew.kickoff(
     inputs={
-        "today": datetime.now().strftime("%Y-%m-%d"),
-        "message": query ,
+        "today_date": datetime.now().strftime("%Y-%m-%d"),
+        "tool_names": tool_names,
+        "input": query ,
 
     })
 
