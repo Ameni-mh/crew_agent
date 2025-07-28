@@ -5,6 +5,7 @@ import os
 from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_room_search_payload_from_key, get_selected_rooms_from_key, is_selected_option_from_key, save_hotel_search_options, save_hotelDetails_room_options
 from schema.hotel_search_request_schema import HotelSearchRequest
 from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator, validate_field_tool
+from schema.hotel_details_request_schema import HotelDetailsRequest
 basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
 output_dir = "./ai-agent-output"
 os.makedirs(output_dir, exist_ok=True)
@@ -46,7 +47,7 @@ Hotel_selector_room_booking_task = Task(
     "   2. Detect the selected hotel option using `is_selected_option_from_key` and extract the hotel ID.",
     "   3. Get the room_search_payload detail with `get_room_search_payload_from_key`."
     "   4. use the following pydantic model to get the hotel details and room options from Gds.",
-    json.dumps(HotelSearchRequest.model_json_schema(), indent=2, ensure_ascii=False),
+    json.dumps(HotelDetailsRequest.model_json_schema(), indent=2, ensure_ascii=False),
     "   5 . Call `search_details_specific_hotel` to get the hotel details and room options.",
     "   6. Save the hotel details and room options using `save_hotelDetails_room_options`.",
     "   7. Return a summary of the available room options.",
