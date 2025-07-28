@@ -3,8 +3,7 @@ from crewai import Agent, Task,  LLM
 from config.config import settings
 import os
 from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_room_search_payload_from_key, get_selected_rooms_from_key, is_selected_option_from_key, save_hotel_search_options, save_hotelDetails_room_options
-from schema.hotel_search_request_schema import HotelSearchRequest
-from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator, validate_field_tool
+from Tool.tool import detect_language_tool
 from schema.hotel_details_request_schema import HotelDetailsRequest
 basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
 output_dir = "./ai-agent-output"

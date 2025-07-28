@@ -82,9 +82,9 @@ def detect_language_tool(message: str):
       return detect(message)
 
 @tool
-async def search_hotels_from_GDSAgregator(request: dict ):
+async def search_hotels_from_GDSAgregator_async(request: dict ):
         """
-    Searches for available hotels using GDS (Global Distribution System) API.
+    Asynchronously Searches for available hotels using GDS (Global Distribution System) API.
     
     Args:
         request (dict): Search criteria following HotelSearchRequest schema

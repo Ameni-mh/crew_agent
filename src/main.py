@@ -6,10 +6,8 @@ from crewai import  Crew, Process
 import agentops
 from config.config import settings
 from Agent.lookup_hotels import search_queries_recommendation_agent, Extract_filed_task
-from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator, validate_field_tool
 from Agent.select_option_agent import Hotel_selector_room_booking_agent, Hotel_selector_room_booking_task
-from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_room_search_payload_from_key, get_selected_rooms_from_key, is_selected_option_from_key, save_hotelDetails_room_options
-import asyncio
+
 
 app = FastAPI()
 
@@ -27,13 +25,7 @@ async def lookup_hotels(query: str):
         content=about_company
     )
 
-    tools_list = [
-        detect_language_tool,
-        validate_field_tool,
-        search_hotels_from_GDSAgregator
-    ]
-    tool_names = [tool.name for tool in tools_list]
-    tools = [tool.description  for tool in tools_list]
+    
 
     agentops.init(
     api_key=settings.agentops_api_key,
@@ -51,7 +43,7 @@ async def lookup_hotels(query: str):
     process=Process.sequential,
     knowledge_sources=[company_context]
 )
-    crew_results = rankyx_crew.kickoff(
+    crew_results = await rankyx_crew.kickoff_async(
     inputs={
         "today_date": datetime.now().strftime("%Y-%m-%d"),
         "input": query
@@ -77,15 +69,7 @@ async def hotel_selector(query: str, convo_id, user_id):
             content=about_company
         )
 
-        tools_list = [
-            get_all_rooms_from_key, #
-            detect_language_tool, #
-            save_hotelDetails_room_options, 
-            change_option_status_hotel_offer, 
-            is_selected_option_from_key, #
-            get_room_search_payload_from_key, 
-            get_selected_rooms_from_key]
-        tool_names = [tool.name for tool in tools_list]
+        
         
 
         agentops.init(

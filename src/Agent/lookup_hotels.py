@@ -4,7 +4,7 @@ from config.config import settings
 import os
 from Tool.redis_tool import save_hotel_search_options
 from schema.hotel_search_request_schema import HotelSearchRequest
-from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator, validate_field_tool
+from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator_async, validate_field_tool
 basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
 output_dir = "./ai-agent-output"
 os.makedirs(output_dir, exist_ok=True)
@@ -22,7 +22,10 @@ search_queries_recommendation_agent = Agent(
     backstory="This agent specializes in parsing hotel search requests from users for hotel lookup.",
     llm=basic_llm,
     verbose=True,
-    tools=[detect_language_tool, validate_field_tool, search_hotels_from_GDSAgregator, save_hotel_search_options],
+    tools=[detect_language_tool, 
+           validate_field_tool, 
+           search_hotels_from_GDSAgregator_async, 
+           save_hotel_search_options],
     
 )
 
@@ -50,12 +53,15 @@ Extract_filed_task = Task(
     "6. Handle language preferences:",
     "   - Use `detect_language_tool` when specific language is requested",
     "   - Respond in detected language",
+    "7. If no results found:",
+    "   - Politely inform user and suggest refining search criteria",
+    "8. If the user asks something outside of this scope, try to provide a helpful and accurate response.",
     "",
     "Begin!",
     "Question: {input}",
     "Answer:"
 ]),
-    expected_output="A natural, friendly language message ",
+    expected_output="A natural, friendly message that includes hotel search results, requests for more information, or an error message.",
     output_file=os.path.join(output_dir, "step_1_suggested_Extraction_data.json"),
     agent=search_queries_recommendation_agent
 )
