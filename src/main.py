@@ -54,9 +54,7 @@ async def lookup_hotels(query: str):
     crew_results = rankyx_crew.kickoff(
     inputs={
         "today_date": datetime.now().strftime("%Y-%m-%d"),
-        "tool_names": tool_names,
-        "input": query ,
-
+        "input": query
     })
 
     result = crew_results.to_dict()
@@ -113,7 +111,6 @@ async def hotel_selector(query: str, convo_id, user_id):
             inputs={
                 "user_id": user_id,
                 "convo_id": convo_id,
-                "tool_names": tool_names,
                 "input": query ,
 
             })

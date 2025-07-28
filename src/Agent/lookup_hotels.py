@@ -51,19 +51,9 @@ Extract_filed_task = Task(
     "   - Use `detect_language_tool` when specific language is requested",
     "   - Respond in detected language",
     "",
-    "Response Format:",
-    "Question: the input question you must answer",
-    "Thought: you should always think about what to do",
-    "Action: the action to take, should be one of [{tool_names}]",
-    "Action Input: the input to the action",
-    "Observation: the result of the action",
-    "... (this Thought/Action/Action Input/Observation can repeat N times)",
-    "Thought: I now know the final answer",
-    "Final Answer: the final answer to the original input question"
-    "",
     "Begin!",
     "Question: {input}",
-    "Thought:"
+    "Answer:"
 ]),
     expected_output="A natural, friendly language message ",
     output_file=os.path.join(output_dir, "step_1_suggested_Extraction_data.json"),
