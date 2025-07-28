@@ -1,3 +1,4 @@
+from typing import Optional
 from redis.asyncio import Redis
 from config.config import settings
 from crewai.tools import tool
@@ -8,7 +9,15 @@ redis = Redis.from_url(redis_url, decode_responses=True)
 @tool
 async def save_hotel_search_options(convo_id, offers, guest):
     """
-    Save the hotel offers and room search payload info as separate keys in Redis.
+    Save hotel search options and guest information to Redis.
+    
+    Args:
+        convo_id (str): Unique conversation identifier
+        offers (list): List of hotel offers to save
+        guest (dict): Guest information and search criteria
+    
+    Returns:
+        str: Success or error message
     """
     try:
         offers_key = f"hotel_booking:offers:{convo_id}"
@@ -23,7 +32,15 @@ async def save_hotel_search_options(convo_id, offers, guest):
 @tool
 async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):
     """
-    Save the room option and hotel details as description, policy and cancellation.
+    Save hotel details and available room options to Redis.
+    
+    Args:
+        convo_id (str): Unique conversation identifier
+        hotelDetails (dict): Hotel information including description, policies, and cancellation rules
+        roomsOption (list): List of available room options with their details
+    
+    Returns:
+        str: Success or error message
     """
     try:
         rooms_key = f"hotel_booking:rooms:{convo_id}"
@@ -38,7 +55,13 @@ async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):
 @tool
 async def get_hotel_search_options(convo_id: str) -> list:
     """
-    Retrieve the list of all hotel search options stored in Redis.
+    Retrieve saved hotel search options from Redis.
+    
+    Args:
+        convo_id (str): Unique conversation identifier
+    
+    Returns:
+        list: List of hotel offers, or error message if not found
     """
     offers_key = f"hotel_booking:offers:{convo_id}"
     offers = await redis.json().get(offers_key, "$")
@@ -50,53 +73,79 @@ async def get_hotel_search_options(convo_id: str) -> list:
 
 @tool
 async def change_option_status_hotel_offer(
-    convo_id: str, selected_option, status: str = "selected"
-):
+    convo_id: str,
+    selected_option: int,
+    status: str = "selected"
+) -> str:
     """
     Change the status of a selected hotel offer in Redis.
-    If status is "selected": set only that hotel to selected and all others to unselected.
-    If status is "unselected": set only that hotel to unselected, others stay unchanged.
+    
+    Args:
+        convo_id (str): Conversation ID to identify the hotel offers
+        selected_option (int): The option number/ID to change status for (Required)
+        status (str, optional): Either "selected" or "unselected". Defaults to "selected"
+    
+    Returns:
+        str: Status of the operation ("selected", "unselected", or error message)
+    
+    Example:
+        >>> await change_option_status_hotel_offer(convo_id="conv123", selected_option="option1")
+        'selected'
     """
+    if not convo_id or not selected_option:
+        return "Error: convo_id and selected_option are required"
+
     offers_key = f"hotel_booking:offers:{convo_id}"
 
     # Get the nested offers list from Redis
-    offers_nested = await redis.json().get(offers_key, "$")
-    if (
-        not offers_nested
-        or not isinstance(offers_nested, list)
-        or not isinstance(offers_nested[0], list)
-    ):
-        return "No offers found for this conversation."
+    try:
+        offers_nested = await redis.json().get(offers_key, "$")
+        if not offers_nested or not isinstance(offers_nested, list):
+            return "No offers found for this conversation."
 
-    offers = offers_nested[0]  # Unpack one level
+        offers = offers_nested[0] if isinstance(offers_nested[0], list) else offers_nested
 
-    # Find index of the selected option
-    idx = next(
-        (i for i, o in enumerate(offers) if o.get("option") == selected_option), None
-    )
-    if idx is None:
-        return f"Option '{selected_option}' not found."
+        # Find index of the selected option
+        idx = next(
+            (i for i, o in enumerate(offers) if str(o.get("option")) == str(selected_option)), 
+            None
+        )
+        if idx is None:
+            return f"Option '{selected_option}' not found."
 
-    if status == "selected":
-        # Mark only the selected offer as "selected", all others "unselected"
-        for i, offer in enumerate(offers):
-            offer["status"] = "selected" if i == idx else "unselected"
+        if status == "selected":
+            # Mark only the selected offer as "selected", all others "unselected"
+            for i, offer in enumerate(offers):
+                offer["status"] = "selected" if i == idx else "unselected"
+            await redis.json().set(offers_key, "$", offers)
+            return "selected"
 
-        await redis.json().set(offers_key, "$", offers)  # Keep original structure
-        return "selected"
+        if status == "unselected":
+            offers[idx]["status"] = "unselected"
+            await redis.json().set(offers_key, "$", offers)
+            return "unselected"
 
-    if status == "unselected":
-        offers[idx]["status"] = "unselected"
-        await redis.json().set(offers_key, "$", offers)  # Also keep structure
+        return "Invalid status value."
 
-        return "unselected"
-
-    return "Invalid status value."
+    except Exception as e:
+        print(f"Error changing option status: {e}")
+        return f"Error: {str(e)}"
 
 @tool
 async def is_selected_option_from_key(convo_id: str) -> dict:
     """
-    Check the hotel offers in Redis and return the selected option if any.
+    Retrieve the currently selected hotel option from Redis.
+    
+    Args:
+        convo_id (str): Unique conversation identifier
+    
+    Returns:
+        dict: {
+            'selected': bool,
+            'option': str,
+            'hotel_id': str,
+            'hotel_name': str
+        } or {'selected': False} if none selected
     """
     try:
         offers_key = f"hotel_booking:offers:{convo_id}"
@@ -127,8 +176,13 @@ async def is_selected_option_from_key(convo_id: str) -> dict:
 @tool
 async def get_room_search_payload_from_key(convo_id: str):
     """
-    This function retrieves the room search payload from Redis for the specified conversation ID.
-    If the payload is not found or is empty, it returns None.
+    Retrieve the room search criteria and guest preferences from Redis.
+    
+    Args:
+        convo_id (str): Unique conversation identifier
+    
+    Returns:
+        dict: Room search parameters or None if not found
     """
     room_search_payload_key = f"hotel_booking:room_search_payload:{convo_id}"
     room_search_payload_details = await redis.json().get(room_search_payload_key, "$")
@@ -145,9 +199,13 @@ async def get_room_search_payload_from_key(convo_id: str):
 @tool
 async def get_selected_rooms_from_key(convo_id: str) -> dict:
     """
-    Check the hotel rooms in Redis and return all selected option if any.
-    If no rooms are selected, return None.
-    If rooms are selected, return a list of dictionaries with room names and their selected counts.
+    Retrieve all selected rooms and their quantities from Redis.
+    
+    Args:
+        convo_id (str): Unique conversation identifier
+    
+    Returns:
+        str: Formatted string of selected rooms and quantities, or error message
     """
     try:
         rooms_key = f"hotel_booking:rooms:{convo_id}"
@@ -177,9 +235,13 @@ async def get_selected_rooms_from_key(convo_id: str) -> dict:
 @tool
 async def get_rooms_name(convo_id: str) -> list[str]:
     """
-    Retrieve the list of room names for a given conversation ID from Redis.
+    Retrieve list of available room names for a hotel.
+    
     Args:
-        convo_id: Unique identifier for the conversation.
+        convo_id (str): Unique conversation identifier
+    
+    Returns:
+        str: Newline-separated list of room names or error message
     """
     try:
         rooms_key = f"hotel_booking:rooms:{convo_id}"
@@ -203,16 +265,17 @@ async def get_rooms_name(convo_id: str) -> list[str]:
         return "Error retrieving room names."
 
 @tool
-async def mark_rooms_selected(
-    convo_id: str, selected_option, additional_selected_count: int
-):
+async def mark_rooms_selected(convo_id: str, selected_option:str, additional_selected_count: int):
     """
-    Updates the number of rooms selected for a given option in Redis by adding to the current count.
-
+    Update the quantity of selected rooms for a specific room type.
+    
     Args:
-        convo_id: Unique identifier for the conversation.
-        selected_option: The selected room option.
-        additional_selected_count: The additional number of rooms to select.
+        convo_id (str): Unique conversation identifier
+        selected_option (str): Room type/name to update
+        additional_selected_count (int): Number of additional rooms to select
+    
+    Returns:
+        str: Confirmation message with updated count or error message
     """
     try:
         if not convo_id or selected_option is None or additional_selected_count is None:
@@ -249,7 +312,14 @@ async def mark_rooms_selected(
 @tool
 async def get_all_rooms_from_key(convo_id: str):
     """
-    Retrieve all available rooms for a selected hotel from Redis."""
+    Retrieve complete information for all available rooms.
+    
+    Args:
+        convo_id (str): Unique conversation identifier
+    
+    Returns:
+        str: Formatted string containing all room details or error message
+    """
     try:
         if not convo_id:
             return "Invalid input 'convo_id', must be provided."
