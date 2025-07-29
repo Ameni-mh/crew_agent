@@ -28,8 +28,8 @@ Hotel_selector_room_booking_agent = Agent(
         is_selected_option_from_key, #
         get_room_search_payload_from_key, 
         get_selected_rooms_from_key],
-    reasoning=True,
-    max_reasoning_attempts=2
+    reasoning=False,
+    max_execution_time=60
     
 )
 
@@ -77,5 +77,5 @@ Hotel_selector_room_booking_task = Task(
 ]),
     expected_output="A natural, friendly language message ",
     output_file=os.path.join(output_dir, "hotel_selector_output.json"),
-    agent=Hotel_selector_room_booking_agent
+    agent=Hotel_selector_room_booking_agent, 
 )

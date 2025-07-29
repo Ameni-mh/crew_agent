@@ -17,8 +17,8 @@ Hotel_assistant_agent = Agent(
     llm=basic_llm,
     verbose=True,
     allow_delegation=True,
-    reasoning=True,
-    max_reasoning_attempts=2
+    reasoning=False,
+    max_execution_time=60,
     #tools=[hotel_selector_agent, hotel_lookup_agent, room_booking_agent]
 )
 

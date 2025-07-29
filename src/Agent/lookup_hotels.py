@@ -26,8 +26,9 @@ search_queries_recommendation_agent = Agent(
            validate_field_tool, 
            search_hotels_from_GDSAgregator_async, 
            save_hotel_search_options],
-    reasoning=True,
-    max_reasoning_attempts=2 
+    reasoning=False,
+    max_execution_time=60
+     
     
 )
 
@@ -66,7 +67,6 @@ Extract_filed_task = Task(
     expected_output="A natural, friendly message that includes hotel search results, requests for more information, or an error message.",
     output_file=os.path.join(output_dir, "step_1_suggested_Extraction_data.json"),
     agent=search_queries_recommendation_agent,
-    async_execution=True
 )
 
 
