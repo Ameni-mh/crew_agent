@@ -26,6 +26,8 @@ search_queries_recommendation_agent = Agent(
            validate_field_tool, 
            search_hotels_from_GDSAgregator_async, 
            save_hotel_search_options],
+    reasoning=True,
+    max_reasoning_attempts=2 
     
 )
 

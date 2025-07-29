@@ -28,6 +28,8 @@ Hotel_selector_room_booking_agent = Agent(
         is_selected_option_from_key, #
         get_room_search_payload_from_key, 
         get_selected_rooms_from_key],
+    reasoning=True,
+    max_reasoning_attempts=2
     
 )
 
