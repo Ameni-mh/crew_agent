@@ -7,6 +7,7 @@ import agentops
 from config.config import settings
 from Agent.lookup_hotels import search_queries_recommendation_agent, Extract_filed_task
 from Agent.select_option_agent import Hotel_selector_room_booking_agent, Hotel_selector_room_booking_task
+from routes.hotel_assistant_route import hotel_router
 
 
 app = FastAPI()
@@ -25,7 +26,6 @@ async def lookup_hotels(query: str):
         content=about_company
     )
 
-    
 
     agentops.init(
     api_key=settings.agentops_api_key,
@@ -122,3 +122,4 @@ async def hotel_selector(query: str, convo_id, user_id):
 
 
 app.include_router(base_router)
+app.include_router(hotel_router)
