@@ -31,7 +31,12 @@ class HotelSearchRequest(BaseModel):
     pagination: int = Field(default=1, ge=1, description="Pagination page number")
     price_from: int = Field(default=0, description="Minimum price filter")
     price_to: int = Field(default=5000000, description="Maximum price filter")
-    ip: str = Field(default="0.0.0.0", description="ip")  
+    ip: str = Field(default="0.0.0.0", description="ip") 
+
+    # Optional fields (no value provided)
+    module_name: str  = Field("hotels", description="Module name, e.g., 'hotels'")
+    rating: int = Field(None, description="Hotel rating filter")
+    user_type: str  = Field(None, description="") 
     
 
     
