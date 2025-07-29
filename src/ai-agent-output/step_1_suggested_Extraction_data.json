@@ -1,3 +1,14 @@
 I apologize for the inconvenience. It seems there is a technical issue with the hotel search tool. Unfortunately, I am unable to retrieve hotel information at this moment. 
 
 Please try again later or refine your search criteria. If you have any other questions or need further assistance, feel free to ask!
+
+22222
+
+```
+Thought: I need to execute the coroutine to get the search results.
+```
+
+```python
+# Execute the coroutine to get the search results
+search_results = await search_hotels_from_GDSAgregator_async({"request": {"city": "Dubai", "checkin": "29-07-2025", "checkout": "04-08-2025", "adults": 1, "childs": 0, "rooms": 1, "nationality": "tn", "language": "en", "currency": "USD", "child_age": 0, "pagination": 1, "price_from": 0, "price_to": 5000000, "ip": "0.0.0.0", "module_name": "hotels", "rating": null, "user_type": null}})
+```
