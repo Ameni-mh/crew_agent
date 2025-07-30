@@ -1,14 +1,18 @@
-I apologize for the inconvenience. It seems there is a technical issue with the hotel search tool. Unfortunately, I am unable to retrieve hotel information at this moment. 
+Here are some 5-star hotel options available in Dubai for your stay from August 4th to August 6th, 2025:
 
-Please try again later or refine your search criteria. If you have any other questions or need further assistance, feel free to ask!
+1. **Movenpick Grand Al Bustan**
+   - Location: Casablanca St - Garhoud - Dubai - United Arab Emirates
+   - Price: $200 per night
+   - ![Image](https://phptravels.net/uploads/184028-28-01-2023-1674874284.jpg)
 
-22222
+2. **Voco Dubai an IHG Hotel**
+   - Location: Dubai - United Arab Emirates
+   - Price: $200 per night
+   - ![Image](https://phptravels.net/uploads/699345-28-01-2023-1674874904.jpg)
 
-```
-Thought: I need to execute the coroutine to get the search results.
-```
+3. **Grand Mercure Hotel and Residences Dubai Airport**
+   - Location: 61B Street - Garhoud - Dubai - United Arab Emirates
+   - Price: $200 per night
+   - ![Image](https://phptravels.net/uploads/213091-28-01-2023-1674875148.jpg)
 
-```python
-# Execute the coroutine to get the search results
-search_results = await search_hotels_from_GDSAgregator_async({"request": {"city": "Dubai", "checkin": "29-07-2025", "checkout": "04-08-2025", "adults": 1, "childs": 0, "rooms": 1, "nationality": "tn", "language": "en", "currency": "USD", "child_age": 0, "pagination": 1, "price_from": 0, "price_to": 5000000, "ip": "0.0.0.0", "module_name": "hotels", "rating": null, "user_type": null}})
-```
+Please let me know if you would like to proceed with booking any of these hotels or if you need further assistance!
