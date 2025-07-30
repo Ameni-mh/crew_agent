@@ -5,29 +5,35 @@ from crewai.tools import tool
 
 redis_url = settings.redis_url
 redis = Redis.from_url(redis_url, decode_responses=True)
-
+    
 @tool
-async def save_hotel_search_options(convo_id, offers, guest):
+async def save_hotel_search_options(input: dict) -> str:
     """
     Save hotel search options and guest information to Redis.
     
-    Args:
-        convo_id (str): Unique conversation identifier
-        offers (list): List of hotel offers to save
-        guest (dict): Guest information and search criteria
+    Args: 
+        input (dict): Contains the following keys:
+        - convo_id (str): Unique conversation identifier
+        - offers (list): List of hotel offers provided by the GDS aggregator in response to the search query
+        - Room Search Payload (dict): Serialized Pydantic model RoomSearchPayload as a dictionary
     
     Returns:
         str: Success or error message
     """
     try:
+        convo_id = input.get("convo_id")
+        offers = input.get("offers")
+        room_search_payload = input.get("room_search_payload")
+
         offers_key = f"hotel_booking:offers:{convo_id}"
-        gest_key = f"hotel_booking:room_search_payload:{convo_id}"
+        payload_key = f"hotel_booking:room_search_payload:{convo_id}"
 
         await redis.json().set(offers_key, "$", offers)
-        await redis.json().set(gest_key, "$", guest)
+        await redis.json().set(payload_key, "$", room_search_payload)
+
         return "Hotel search options saved successfully."
     except Exception as e:
-        return "Error saving hotel search options."
+        return f"Error saving hotel search options: {str(e)}"
 
 @tool
 async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):

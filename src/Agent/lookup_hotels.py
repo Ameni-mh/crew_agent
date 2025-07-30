@@ -5,6 +5,7 @@ import os
 from Tool.redis_tool import save_hotel_search_options
 from schema.hotel_search_request_schema import HotelSearchRequest
 from Tool.tool import detect_language_tool, search_hotels_from_GDSAgregator_async, validate_field_tool
+from schema.room_search_playload import RoomSearchPayload
 basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
 output_dir = "./ai-agent-output"
 os.makedirs(output_dir, exist_ok=True)
@@ -26,8 +27,9 @@ search_queries_recommendation_agent = Agent(
            validate_field_tool, 
            search_hotels_from_GDSAgregator_async, 
            save_hotel_search_options],
-    reasoning=False,
-    max_execution_time=60
+    reasoning=True,
+    max_reasoning_attempts=2
+    #max_execution_time=60
      
     
 )
@@ -36,6 +38,7 @@ search_queries_recommendation_agent = Agent(
 Extract_filed_task = Task(
     description="\n".join([
     "Today is {today_date}", 
+    "Conversation ID: {convo_id}",
     "You are a professional multilingual AI travel assistant specialized in hotel bookings.",
     "Core Responsibilities:",
     "1. Extract and validate hotel search requirements from user messages",
@@ -51,8 +54,12 @@ Extract_filed_task = Task(
     "   - Maintain context of previously valid fields",
     "5. If validation succeeds:",
     "   - 1  Execute search using `search_hotels_from_GDSAgregator` asynchronously with await keyword",
-    "   - 2  Analyze results and recommend best matches",
-    "   - 3  Save search options using `save_hotel_search_options`",
+    "   - 2  Create room_search_payload (a RoomSearchPayload Pydantic model) from the extracted input",
+    "        JSON Schema Reference: ",
+    json.dumps(RoomSearchPayload.model_json_schema(), indent=2, ensure_ascii=False),
+    "   - 3  Save search options using `save_hotel_search_options` : room_search_payload, convo_id, offers",
+    "   - 4  Analyze results and recommend best matches",
+              
     "6. Handle language preferences:", 
     "   - Use `detect_language_tool` when specific language is requested",
     "   - Respond in detected language",
