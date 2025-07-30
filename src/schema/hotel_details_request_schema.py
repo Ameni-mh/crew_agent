@@ -22,9 +22,4 @@ class HotelDetailsRequest(BaseModel):
     currency: str = Field(..., description="Currency code, e.g. 'usd'")
     nationality: str = Field(..., description="Nationality code, e.g. 'PK'")
 
-    @field_validator("checkin", "checkout")
-    def validate_date_format(cls, v):
-        if not re.match(r"^\d{2}-\d{2}-\d{4}$", v):
-            msg = "Date must be in DD-MM-YYYY format"
-            raise ValueError(msg)
-        return v
+    

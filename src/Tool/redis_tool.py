@@ -25,10 +25,19 @@ async def save_hotel_search_options(input: dict) -> str:
         offers = input.get("offers")
         room_search_payload = input.get("room_search_payload")
 
+        if not convo_id or not isinstance(offers, list) or not isinstance(room_search_payload, dict):
+            return "Invalid input: Missing or improperly formatted fields."
+
+        # Add indexing to offers for selection tracking
+        options = [
+            {**offer, "option": idx + 1, "status": "unselected"}
+            for idx, offer in enumerate(offers)
+        ]
+
         offers_key = f"hotel_booking:offers:{convo_id}"
         payload_key = f"hotel_booking:room_search_payload:{convo_id}"
 
-        await redis.json().set(offers_key, "$", offers)
+        await redis.json().set(offers_key, "$", options)
         await redis.json().set(payload_key, "$", room_search_payload)
 
         return "Hotel search options saved successfully."
