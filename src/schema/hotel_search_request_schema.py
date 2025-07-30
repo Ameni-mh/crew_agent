@@ -1,13 +1,13 @@
 #from langchain_core.pydantic_v1 import BaseModel
 from datetime import datetime
 
-from pydantic import BaseModel, Field,  model_validator
+from pydantic import BaseModel, Field  
 
 
 class HotelSearchRequest(BaseModel):
     # Required fields (values provided)
     city: str = Field(
-        ..., description="Search query city, e.g., 'dubai'"
+        ..., description="Search query city, e.g., 'Dubai'"
     )
     checkin: str  = Field(
         ...,

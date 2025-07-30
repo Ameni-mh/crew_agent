@@ -1,6 +1,6 @@
 fastapi
 uvicorn[standard]
 pydantic-settings
-crewai[tools,agentops]==0.114.0
+crewai[tools,agentops]==0.150.0
 langdetect
 redis
