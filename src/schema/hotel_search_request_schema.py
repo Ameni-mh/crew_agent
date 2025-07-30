@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 class HotelSearchRequest(BaseModel):
     # Required fields (values provided)
     city: str = Field(
-        ..., description="Search query city, e.g., 'Dubai'"
+        ..., description="The city to search for hotels in, e.g., 'Dubai'. If not provided, prompt the user for it."
     )
     checkin: str  = Field(
         ...,

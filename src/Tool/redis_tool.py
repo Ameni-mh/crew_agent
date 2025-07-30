@@ -14,8 +14,8 @@ async def save_hotel_search_options(input: dict) -> str:
     Args: 
         input (dict): Contains the following keys:
         - convo_id (str): Unique conversation identifier
-        - offers (list): List of hotel offers provided by the GDS aggregator in response to the search query
-        - Room Search Payload (dict): Serialized Pydantic model RoomSearchPayload as a dictionary
+        - offers (list): List of hotel offers returned from the GDS aggregator.
+        - Room Search Payload (dict): Serialized Pydantic model RoomSearchPayload 
     
     Returns:
         str: Success or error message
