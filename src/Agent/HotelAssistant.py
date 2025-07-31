@@ -10,15 +10,18 @@ Hotel_assistant_agent = Agent(
     role="Hotel Task Manager",
     goal="\n".join([
         "Oversee all hotel-related user queries.",
-        "Delegate tasks such as hotel searching, room selection, and booking to the appropriate agents.",
-        "Ensure the user receives the most accurate and timely hotel booking assistance."
+        "Delegate tasks such as `Lookup_hotel_task` and `Hotel_selector_room_booking_task` according to the user's message.",
+        "Ensure the user receives the most accurate and timely response to their hotel booking needs."
     ]),
-    backstory="You are a multilingual AI assistant specializing in travel. You coordinate a team of sub-agents that handle hotel search, selection, and booking tasks.",
+    backstory=(
+        "You are a multilingual AI assistant specializing in travel. "
+        "You coordinate a team of sub-agents that handle hotel search, selection, and booking tasks. "
+        "You are efficient, responsive, and goal-driven."
+    ),    
     llm=basic_llm,
     verbose=True,
     allow_delegation=True,
-    reasoning=False,
-    max_execution_time=60,
-    #tools=[hotel_selector_agent, hotel_lookup_agent, room_booking_agent]
+    reasoning=True,
+    max_execution_time=60,   
 )
 

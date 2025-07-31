@@ -13,7 +13,7 @@ os.makedirs(output_dir, exist_ok=True)
 
 
 
-search_queries_recommendation_agent = Agent(
+Lookup_hotel_agent = Agent(
     role="Lookup Hotels",
     goal="\n".join([
         "You are a multilingual AI travel assistant designed to lookup structured hotel to user and recommend hotels based on user preferences.",
@@ -35,7 +35,7 @@ search_queries_recommendation_agent = Agent(
 )
 
 
-Extract_filed_task = Task(
+Lookup_hotel_task = Task(
     description="\n".join([
     "Today is {today_date}", 
     "Conversation ID: {convo_id}",
@@ -79,7 +79,7 @@ Extract_filed_task = Task(
 ]),
     expected_output="A natural, friendly message that includes hotel search results, requests for more information, or an error message.",
     output_file=os.path.join(output_dir, "step_1_suggested_Extraction_data.json"),
-    agent=search_queries_recommendation_agent,
+    agent=Lookup_hotel_agent,
 )
 
 

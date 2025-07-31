@@ -13,9 +13,11 @@ os.makedirs(output_dir, exist_ok=True)
 Hotel_selector_room_booking_agent = Agent(
     role="Hotel Selector and room booking",
     goal="\n".join([
-        "You are a helpful and multilingual AI assistant specialized in hotel selection and room booking.",
-        "Your job is to guide users through the process of selecting hotels and rooms, detecting their choices, and confirming their booking",
-        "respond with the detected language.",
+    "Oversee all hotel-related user queries.",
+    "Delegate to `Lookup_hotel_task` if the user is starting a search or changing criteria.",
+    "Delegate to `Hotel_selector_room_booking_task` if the user selects a hotel or wants to book.",
+    "Use context and prior conversation data to decide what step the user is on.",
+    "Ensure the user receives the most accurate and timely hotel booking assistance."
     ]),
     backstory="This agent specializes in Hotel Selector and room booking before look up Hotels based on user preferences and previously saved search options.",
     llm=basic_llm,
@@ -40,7 +42,7 @@ Hotel_selector_room_booking_task = Task(
     " Follow the logic below to interact with the user, detect their intentions, and respond with appropriate room and hotel booking information.",
     "",
     "Process Flow:",
-    "- You need user id {user_id} and {convo_id} to interact with the hotel details and room options.",
+    "- You need user id {user_id} and the conversation id {convo_id} to interact with the hotel details and room options.",
     "- Analyze the user's input to detect if they are selecting a hotel option or a room option.",
     "",
     "- If the user selects a hotel option:",
