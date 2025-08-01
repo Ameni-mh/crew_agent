@@ -50,30 +50,3 @@ async def save_hotelDetails_roomsOption(self, convo_id, hotelDetails_request: di
         except Exception as e:
             return "Error saving hotel details and room options"
 
-@tool
-async def Handle_room_for_selected_hotel(self, convo_id, option_from_user: int):
-        """
-        Handle room details for the hotel option selected by the user.
-
-        Steps:
-        1. Update the selected hotel option status in Redis.
-        2. Detect the selected hotel option and extract the hotel ID.
-        3. Build the guest detail with hotel id  object and retrieve specific hotel details from GDS.
-        4. Save hotel and room details to Redis.
-        5. Return a summary of the available room options.
-        """
-        
-
-        await change_option_status_hotel_offer(convo_id, option_from_user)
-        detect_selected_info = await is_selected_option_from_key(convo_id)
-        hotel_id = detect_selected_info.get("hotel_id")
-
-        room_search_payload = await get_room_search_payload_from_key(convo_id)
-        hote_details = HotelDetailsRequest(hotel_id=hotel_id, **room_search_payload)
-        hotelDetails_request = await search_details_specific_hotel(
-            hote_details
-        )
-        await save_hotelDetails_roomsOption(convo_id, hotelDetails_request)
-        
-
-        return hotelDetails_request

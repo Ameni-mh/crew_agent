@@ -36,18 +36,13 @@ async def search_hotels_from_GDSAgregator(
                 )
                 response.raise_for_status()
                 response = response.json()
-                return response.dump(by_alias=True, exclude_none=True)
-
-        except httpx.ReadTimeout:
-            return " Looks like our hotel search is taking a break. Please try again soon!"
-            
+                return response.dump(by_alias=True, exclude_none=True)      
 
         except httpx.HTTPStatusError:
             return "Sorry! We ran into an issue finding hotels for you. Could you try again a little later?"
             
 
-        except Exception:
-            return "Oops! Something went wrong while searching for hotels. Please try again in a moment."
+       
             
 @tool
 async def search_details_specific_hotel(self, request: HotelSearchRequest):

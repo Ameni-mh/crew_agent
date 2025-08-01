@@ -9,7 +9,8 @@ redis = Redis.from_url(redis_url, decode_responses=True)
 @tool
 async def save_hotel_search_options(input: dict) -> str:
     """
-    Save hotel search options and guest information to Redis.
+    Save hotel offer options and guest information to Redis.
+    Call this tool before searching for hotels with this tool ``search_hotels_from_GDSAgregator_async``.
     
     Args: 
         input (dict): Contains the following keys:

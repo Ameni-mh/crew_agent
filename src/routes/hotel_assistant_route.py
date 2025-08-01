@@ -5,7 +5,7 @@ from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSourc
 from crewai import  Crew, Process
 import agentops
 from config.config import settings
-from Agent.lookup_hotels import Lookup_hotel_agent, Lookup_hotel_task
+from Agent.lookup_hotels import booking_agent, boking_task
 from Agent.HotelAssistant import Hotel_assistant_agent
 from Agent.select_option_agent import Hotel_selector_room_booking_agent, Hotel_selector_room_booking_task
 
@@ -34,17 +34,15 @@ async def hotel_assistant(query: str, convo_id, user_id):
   
     rankyx_crew = Crew(
     agents=[
-        Lookup_hotel_agent ,
-        Hotel_selector_room_booking_agent,
+        booking_agent,  
     ],
     tasks=[
-        Lookup_hotel_task,
-        Hotel_selector_room_booking_task,
+        boking_task,
         ],
-    process=Process.hierarchical,
-    manager_agent=Hotel_assistant_agent,
+    process=Process.sequential,
+    planning=True,
     knowledge_sources=[company_context],
-    planning=True
+    
 )
     crew_results = await rankyx_crew.kickoff_async(
     inputs={

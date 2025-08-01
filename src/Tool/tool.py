@@ -124,11 +124,7 @@ async def search_hotels_from_GDSAgregator_async(request: dict ):
                 return response
 
         except httpx.ReadTimeout:
-            raise
+            return "error: The request to the GDS API timed out. Please try again later."
 
 
-        except httpx.HTTPStatusError as e:
-            raise
-
-        except Exception as e:
-          raise
+        
