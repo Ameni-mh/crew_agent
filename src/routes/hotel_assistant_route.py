@@ -6,12 +6,18 @@ from crewai import  Crew, Process
 import agentops
 from config.config import settings
 from Agent.lookup_hotels import booking_agent, boking_task
+from crewai.memory import LongTermMemory, ShortTermMemory
+from crewai.memory.storage.ltm_sqlite_storage import LTMSQLiteStorage
+import os 
 
+custom_storage_path = "./storage"
+os.makedirs(custom_storage_path, exist_ok=True)
 
 hotel_router = APIRouter(
     prefix="/api/v1",
     tags= ["api_v1"],
 )
+
 
 @hotel_router.post("/hotels")
 async def hotel_assistant(query: str, convo_id, user_id):
@@ -40,6 +46,12 @@ async def hotel_assistant(query: str, convo_id, user_id):
     process=Process.sequential,
     planning=True,
     memory=True,
+    long_term_memory=LongTermMemory(
+        storage=LTMSQLiteStorage(
+            db_path=f"{custom_storage_path}/memory.db"
+        )
+    ),
+    short_term_memory=ShortTermMemory(path=f"{custom_storage_path}/short_memory"),
     knowledge_sources=[company_context],
     
 )
