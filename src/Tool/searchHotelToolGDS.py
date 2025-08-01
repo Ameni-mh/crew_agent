@@ -4,6 +4,7 @@ from schema.hotel_search_request_schema import HotelSearchRequest
 import httpx
 from urllib.parse import urljoin
 from config.config import settings
+from src.Tool.redis_tool import save_hotel_search_options
 
 class HotelSearchRequestWrapper(BaseModel):
     request: HotelSearchRequest
@@ -13,18 +14,22 @@ class SearchHotelsFromGDS(BaseTool):
     description: str = "Search for available hotels via external GDS."
     args_schema: BaseModel = HotelSearchRequestWrapper
 
-    async def _run(self, request : HotelSearchRequest) -> str:
+    async def _run(self, request : HotelSearchRequest, convo_id:str) -> str:
         try:
-            # Convert dict to Pydantic model if necessary
-            if isinstance(request, dict):
-                gds_query = HotelSearchRequest(**request)
-            else:
-                gds_query = request
-
-            gds_query.module_name = "hotels"
+            room_search_payload = {
+                    "checkin": request.checkin,
+                    "checkout": request.checkout,
+                    "adults": getattr(request, "adults", 1),
+                    "childs": getattr(request, "childs", 0),
+                    "child_age": getattr(request, "childs_age", 0),
+                    "rooms": request.rooms,
+                    "language": getattr(request, "language", "en"),
+                    "currency": getattr(request, "currency", ""),
+                    "nationality":request.nationality,
+                }
 
             # Convert to dict for HTTP request
-            params = gds_query.model_dump(by_alias=True, exclude_none=True)
+            params = request.model_dump(by_alias=True, exclude_none=True)
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -34,7 +39,9 @@ class SearchHotelsFromGDS(BaseTool):
                 )
                 response.raise_for_status()
                 response = response.json()
-                return response.dump(by_alias=True, exclude_none=True)      
+            
+                await save_hotel_search_options(convo_id, response.get("response"), room_search_payload)
+                return response.dump(by_alias=True, exclude_none=True)     
 
         except httpx.HTTPStatusError:
             return "We ran into an issue finding hotels for you."

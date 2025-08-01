@@ -7,7 +7,7 @@ redis_url = settings.redis_url
 redis = Redis.from_url(redis_url, decode_responses=True)
     
 
-async def save_hotel_search_options(input: dict) -> str:
+async def save_hotel_search_options(convo_id:str, offers: list,room_search_payload :dict ) -> str:
     """
     Save hotel offer options and guest information to Redis.
     Call this tool before searching for hotels with this tool ``search_hotels_from_GDSAgregator_async``.
@@ -22,9 +22,6 @@ async def save_hotel_search_options(input: dict) -> str:
         str: Success or error message
     """
     try:
-        convo_id = input.get("convo_id")
-        offers = input.get("offers")
-        room_search_payload = input.get("room_search_payload")
 
         if not convo_id or not isinstance(offers, list) or not isinstance(room_search_payload, dict):
             return "Invalid input: Missing or improperly formatted fields."
