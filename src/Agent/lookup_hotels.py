@@ -28,11 +28,11 @@ booking_agent = Agent(
     llm=basic_llm,
     verbose=True,
     tools=[ 
-            validate_field_tool, 
+             
             SearchHotelsFromGDS(),
             SearchDetailsSpecificHotel(),
             get_all_rooms_from_key, #
-            detect_language_tool, #
+            
             change_option_status_hotel_offer, 
             selected_option_from_key, #
             get_room_search_payload_from_key, 
