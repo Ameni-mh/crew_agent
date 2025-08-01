@@ -4,7 +4,7 @@ from crewai.tools import tool
 from schema.hotel_details_request_schema import HotelDetailsRequest
 
 
-async def save_hotelDetails_roomsOption(self, convo_id, hotelDetails_request: dict):
+async def save_hotelDetails_roomsOption(convo_id, hotelDetails_request: dict):
         """        
         Save the hotel details and room options to Redis. 
         Args:
