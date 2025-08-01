@@ -4,11 +4,12 @@ from schema.hotel_search_request_schema import HotelSearchRequest
 import httpx
 from urllib.parse import urljoin
 from config.config import settings
-from src.Tool.redis_tool import save_hotel_search_options
+from Tool.redis_tool import save_hotel_search_options
 
 class HotelSearchRequestWrapper(BaseModel):
     request: HotelSearchRequest
-
+    convo_id: str
+    
 class SearchHotelsFromGDS(BaseTool):
     name: str = "Search Hotels from GDS"
     description: str = "Search for available hotels via external GDS."
