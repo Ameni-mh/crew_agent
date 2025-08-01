@@ -6,7 +6,7 @@ from crewai.tools import tool
 redis_url = settings.redis_url
 redis = Redis.from_url(redis_url, decode_responses=True)
     
-@tool
+
 async def save_hotel_search_options(input: dict) -> str:
     """
     Save hotel offer options and guest information to Redis.
@@ -45,7 +45,7 @@ async def save_hotel_search_options(input: dict) -> str:
     except Exception as e:
         return f"Error saving hotel search options: {str(e)}"
 
-@tool
+
 async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):
     """
     Save hotel details and available room options to Redis.
@@ -148,7 +148,7 @@ async def change_option_status_hotel_offer(
         return f"Error: {str(e)}"
 
 @tool
-async def is_selected_option_from_key(convo_id: str) -> dict:
+async def selected_option_from_key(convo_id: str) -> dict:
     """
     Retrieve the currently selected hotel option from Redis.
     
@@ -176,18 +176,17 @@ async def is_selected_option_from_key(convo_id: str) -> dict:
 
         for offer in offers:
             if offer.get("status") == "selected":
-                return {
-                    "selected": True,
-                    "option": offer.get("option"),
-                    "hotel_id": offer.get("hotel_id"),
-                    "hotel_name": offer.get("name"),
-                }
+                answer = "\n".join([
+                    f"The offer with option ID '{offer ['option']}' for hotel '{offer['hotel_name']}' "
+                    f"(Hotel ID: {offer ['hotel_id']}) has been selected."
+                ]
+)
+                return answer
 
-        return {"selected": False}
+        return "has not been selected"
 
     except Exception as e:
-        print(f"[get_selected_option_from_key] Error reading from Redis: {e}")
-        return {"selected": False}
+        return "Error reading from Redis"
 
 @tool
 async def get_room_search_payload_from_key(convo_id: str):
