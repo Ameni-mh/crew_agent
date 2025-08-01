@@ -22,11 +22,9 @@ class HotelSearchRequest(BaseModel):
     adults: int = Field(default=1, ge=1, description="Number of adult guests")
     childs: int = Field(default=0, ge=0, description="Number of children")
     rooms: int = Field(default=1, ge=1, description="Number of rooms to book")
-    nationality: str = Field(
-        default=None, description="Nationality code, e.g., 'pk'"
-    )
-    language: str = Field(default="en", description="Language code, e.g., 'en'")
-    currency: str = Field(default="USD", description="Currency code, e.g., 'php'")
+    nationality: str = Field(..., description="Nationality code (ISO 3166-1 alpha-2), e.g., 'PK' for Pakistan")
+    language: str = Field(default="en", description="Language code (ISO 639-1), e.g., 'en' for English")
+    currency: str = Field(default="USD", description="Currency code (ISO 4217), e.g., 'PHP' for Philippine Peso")
     child_age: int = Field(default=0, ge=0, description="Age of child (0 if none)")
     pagination: int = Field(default=1, ge=1, description="Pagination page number")
     price_from: int = Field(default=0, description="Minimum price filter")
