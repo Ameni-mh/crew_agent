@@ -5,12 +5,15 @@ from urllib.parse import urljoin
 from config.config import settings
 from schema.hotel_details_request_schema import HotelDetailsRequest
 
+class HotelDetailsRequestWrapper(BaseModel):
+    request: HotelDetailsRequest 
+
 class SearchDetailsSpecificHotel(BaseTool):
     name: str = "Search Details Specific Hotel"
     description: str = "Search for specific hotel details using GDS API."
-    args_schema: BaseModel = HotelDetailsRequest
+    args_schema: BaseModel = HotelDetailsRequestWrapper
 
-    async def _run(self, request: str) -> str:
+    async def _run(self, request: HotelDetailsRequest) -> str:
         try:
             # Convert to dict for HTTP request
             params = request.model_dump(by_alias=True, exclude_none=True)

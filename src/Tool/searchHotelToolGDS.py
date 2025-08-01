@@ -1,17 +1,19 @@
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
-from src.schema.hotel_search_request_schema import HotelSearchRequest
+from schema.hotel_search_request_schema import HotelSearchRequest
 import httpx
 from urllib.parse import urljoin
 from config.config import settings
 
+class HotelSearchRequestWrapper(BaseModel):
+    request: HotelSearchRequest
 
 class SearchHotelsFromGDS(BaseTool):
     name: str = "Search Hotels from GDS"
     description: str = "Search for available hotels via external GDS."
-    args_schema: BaseModel = HotelSearchRequest
+    args_schema: BaseModel = HotelSearchRequestWrapper
 
-    async def _run(self, request) -> str:
+    async def _run(self, request : HotelSearchRequest) -> str:
         try:
             # Convert dict to Pydantic model if necessary
             if isinstance(request, dict):

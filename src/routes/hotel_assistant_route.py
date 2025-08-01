@@ -6,8 +6,6 @@ from crewai import  Crew, Process
 import agentops
 from config.config import settings
 from Agent.lookup_hotels import booking_agent, boking_task
-from Agent.HotelAssistant import Hotel_assistant_agent
-from Agent.select_option_agent import Hotel_selector_room_booking_agent, Hotel_selector_room_booking_task
 
 
 hotel_router = APIRouter(
@@ -41,6 +39,7 @@ async def hotel_assistant(query: str, convo_id, user_id):
         ],
     process=Process.sequential,
     planning=True,
+    memory=True,
     knowledge_sources=[company_context],
     
 )
