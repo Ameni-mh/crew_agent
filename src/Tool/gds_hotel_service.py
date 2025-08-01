@@ -7,65 +7,7 @@ from src.schema.hotel_search_request_schema import HotelSearchRequest
 
 from config.config import settings
 
-
-@tool
-async def search_hotels_from_GDSAgregator(
-         request: HotelSearchRequest | dict
-    ) -> dict:
-        """
-        Search for available hotels via external GDS.
-        Formats the request, handles timeouts and HTTP errors gracefully.
-        """
-        try:
-            # Convert dict to Pydantic model if necessary
-            if isinstance(request, dict):
-                gds_query = HotelSearchRequest(**request)
-            else:
-                gds_query = request
-
-            gds_query.module_name = "hotels"
-
-            # Convert to dict for HTTP request
-            params = gds_query.model_dump(by_alias=True, exclude_none=True)
-
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    urljoin(settings.gds_base_url, "/api/hotel_search"),
-                    data=params,
-                    headers={"x-api-key": settings.gds_api_key},
-                )
-                response.raise_for_status()
-                response = response.json()
-                return response.dump(by_alias=True, exclude_none=True)      
-
-        except httpx.HTTPStatusError:
-            return "Sorry! We ran into an issue finding hotels for you. Could you try again a little later?"
-            
-
-       
-            
-@tool
-async def search_details_specific_hotel(self, request: HotelSearchRequest):
-        """"Search for specific hotel details using GDS API.
-        Args:
-            request (HotelSearchRequest): Search criteria following HotelSearchRequest schema"""
-        try:
-            # Convert to dict for HTTP request
-            params = request.model_dump(by_alias=True, exclude_none=True)
-
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    urljoin(settings.gds_base_url, "/api/hotel_details"),
-                    data=params,
-                    headers={"x-api-key": ""},
-                )
-                response.raise_for_status()
-                response = response.json()
-                return response.dump(by_alias=True, exclude_none=True)
-
-        except (httpx.ReadTimeout, httpx.HTTPStatusError, Exception):
-            return "We’re having trouble fetching room details for this hotel"
-            
+          
 
         
 @tool
