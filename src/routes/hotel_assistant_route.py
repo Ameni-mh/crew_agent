@@ -8,6 +8,9 @@ from config.config import settings
 from Agent.lookup_hotels import booking_agent, boking_task
 from crewai.memory import LongTermMemory, ShortTermMemory
 from crewai.memory.storage.ltm_sqlite_storage import LTMSQLiteStorage
+from crewai.utilities.paths import db_storage_path
+from crewai.memory.storage.rag_storage import RAGStorage
+import chromadb
 import os 
 
 custom_storage_path = "./storage"
@@ -21,6 +24,19 @@ hotel_router = APIRouter(
 
 @hotel_router.post("/hotels")
 async def hotel_assistant(query: str, convo_id, user_id):
+    # Connect to CrewAI's ChromaDB
+    storage_path = db_storage_path()
+    chroma_path = os.path.join(storage_path, "short_term")
+
+    if os.path.exists(chroma_path):
+        client = chromadb.PersistentClient(path=chroma_path)
+        collections = client.list_collections()
+
+        print("ChromaDB Collections:")
+        for collection in collections:
+            print(f"  - {collection.name}: {collection.count()} documents")
+    else:
+        print("No ChromaDB storage found")
 
     about_company = "Vialink is a company that provides AI solutions to help Travels booking hotel, flighet."
 
@@ -51,7 +67,14 @@ async def hotel_assistant(query: str, convo_id, user_id):
             db_path=f"{custom_storage_path}/memory.db"
         )
     ),
-    short_term_memory=ShortTermMemory(path=f"{custom_storage_path}/short_memory"),
+    short_term_memory=ShortTermMemory(
+        storage=RAGStorage(
+            type="short_term",
+            allow_reset=True,
+        ),
+        path=f"{custom_storage_path}/short_memory"
+        ),
+    
     knowledge_sources=[company_context],
     
 )

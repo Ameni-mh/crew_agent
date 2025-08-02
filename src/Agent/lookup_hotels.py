@@ -40,7 +40,8 @@ booking_agent = Agent(
             
            ],
     reasoning=True,
-    max_reasoning_attempts=2
+    max_reasoning_attempts=2,
+    memory= True
     #max_execution_time=60
      
     
