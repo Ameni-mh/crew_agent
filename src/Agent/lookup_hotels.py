@@ -1,29 +1,37 @@
 import json
-from crewai import Agent, Task,  LLM
+from crewai import Agent, Crew, Process, Task,  LLM
 from config.config import settings
 import os
 from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_room_search_payload_from_key, get_selected_rooms_from_key,  save_hotel_search_options, save_hotelDetails_room_options, selected_option_from_key
 from Tool.searchHotelToolGDS import SearchHotelsFromGDS
 from Tool.DetailHotel_tool import SearchDetailsSpecificHotel
-basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
+from Tool.gds_hotel_service import send_shortlink_request_hotelBooking
+from pathlib import Path
+from crewai.memory import LongTermMemory, ShortTermMemory
+from crewai.memory.storage.ltm_sqlite_storage import LTMSQLiteStorage
+from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
+from crewai.memory.storage.rag_storage import RAGStorage
+
+
+os.environ["OPENAI_API_KEY"] = settings.openai_api_key
 
 output_dir = "./ai-agent-output"
 os.makedirs(output_dir, exist_ok=True)
 
+# Ensure storage directory exists with proper permissions
+custom_storage_path = "./storage"
+os.makedirs(custom_storage_path, exist_ok=True)
 
+basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
 
 booking_agent = Agent(
     role="Hotel Booking Specialist",
     goal="\n".join([
-        "You are a multilingual AI travel assistant specialized in hotel booking.",
-        "Help users search, compare, and book hotels efficiently.",
-        "Always respond in the user's detected language.",
-        "Provide clear, actionable recommendations based on user preferences."
+        "Your role is to help users with their queries related to Hotel bookings",
+        "You have access to various tools and databases to search for information, and you should utilize them effectively.",
     ]),
     backstory="\n".join([
-        "You are an experienced travel consultant with deep knowledge of global hospitality.",
-        "You excel at understanding customer needs and matching them with perfect accommodations.",
-        "You have access to comprehensive hotel databases and booking systems."
+        "You are an advanced customer support assistant for Vialink, designed to provide comprehensive and accurate assistance to users.",
     ]),
     llm=basic_llm,
     verbose=True,
@@ -31,42 +39,27 @@ booking_agent = Agent(
              
             SearchHotelsFromGDS(),
             SearchDetailsSpecificHotel(),
-            get_all_rooms_from_key, #
-            
-            change_option_status_hotel_offer, 
-            selected_option_from_key, #
-            get_room_search_payload_from_key, 
-            get_selected_rooms_from_key,
-            
+            send_shortlink_request_hotelBooking,            
            ],
     reasoning=True,
     max_reasoning_attempts=2,
-    memory= True
-    #max_execution_time=60
-     
-    
+    memory= True     
 )
 
 
 boking_task = Task(
     description="\n".join([
-    "=== CONTEXT ===",
-    "Today's date: {today_date}",
-    "Conversation ID: {convo_id}",
-    "User ID: {user_id}",
+    "When conducting searches:",
+    "- Be thorough and persistent. If initial searches yield no results, broaden your search parameters.",
+    "- Prioritize finding relevant, up-to-date information.",
+    "- Only conclude a search after exhausting all available options.",
     "",
-    "=== YOUR MISSION ===",
-    "Help users with their hotel booking journey from search to confirmation.",
-    "Be proactive, friendly, and efficient in your assistance.",
+    "If a query is unclear or lacks sufficient information, ask the user for clarification.",
+    "Provide responses that are clear, concise, and directly address the user's needs.",
+    "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details",
     "",
-    "=== RESPONSE GUIDELINES ===",
-    "- Always be helpful and encouraging",
-    "- Provide specific, actionable information",
-    "- Ask clarifying questions when needed",
-    "- Use appropriate tools based on user's current step in booking process",
-    "- Handle errors gracefully with alternative suggestions",
-    "",
-    "=== USER INPUT ===",
+    "Current time:",
+    "{today_date}",
     "Question: {input}",
     "",
     "Your Response:"
@@ -84,5 +77,43 @@ boking_task = Task(
 )
 
 
+def create_crew():
+    """Create crew with fallback options if memory fails"""
+    
+    about_company = "Vialink is a company that provides AI solutions to help Travels booking hotel, flighet."
+    company_context = StringKnowledgeSource(content=about_company)
+    
+    try:
+            # Ensure database is writable
+            ltm_db_path = f"{custom_storage_path}/memory.db"
+            stm_path = f"{custom_storage_path}/short_memory"
+            
+            #ensure_database_writable(ltm_db_path)
+            
+            crew = Crew(
+                agents=[booking_agent],
+                tasks=[boking_task],
+                process=Process.sequential,
+                planning=True,
+                memory=True,
+                knowledge_sources=[company_context],
+            )
+            return crew
+            
+    except Exception as memory_error:
+            print(f"Failed to create crew with memory: {memory_error}")
+            print("Falling back to crew without persistent memory...")
+    
+    crew = Crew(
+                agents=[booking_agent],
+                tasks=[boking_task],
+                process=Process.sequential,
+                planning=True,
+                memory=False,
+                knowledge_sources=[company_context],
+            )
+    return crew
 
+            
+    
 
