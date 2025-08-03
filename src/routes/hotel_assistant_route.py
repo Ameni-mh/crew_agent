@@ -24,7 +24,7 @@ hotel_router = APIRouter(
     tags= ["api_v1"],
 )
 
-
+messages= []
 @hotel_router.post("/hotels")
 async def hotel_assistant(query: str):
     print("CREWAI_STORAGE_DIR:", os.getenv("CREWAI_STORAGE_DIR"))
@@ -71,12 +71,17 @@ async def hotel_assistant(query: str):
   
     crew = create_crew()
     
+    message = {"Human" : query }
+    messages.append(message)
+    
     
     crew_results = await crew.kickoff_async(
     inputs={
         "today_date": datetime.now().strftime("%Y-%m-%d"),
-        "input": query
+        "input": query,
+        "chat_history": messages
     })
+    
 
     result = crew_results
 

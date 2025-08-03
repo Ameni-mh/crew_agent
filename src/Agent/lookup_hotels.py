@@ -61,6 +61,8 @@ boking_task = Task(
     "",
     "Current time:",
     "{today_date}",
+    "chat history",
+    "{chat_history}",
     "Question: {input}",
     "",
     "Your Response:"
