@@ -6,7 +6,7 @@ from schema.hotel_search_request_schema import HotelSearchRequest
 import httpx
 from urllib.parse import urljoin
 from config.config import settings
-from Tool.redis_tool import save_hotel_search_options
+
 
 class HotelSearchRequestWrapper(BaseModel):
     request: HotelSearchRequest = Field(..., description="any date before put it in this schema be (DD-MM-YYYY)  ")
@@ -21,10 +21,10 @@ class SearchHotelsFromGDS(BaseTool):
                     city: str,
                     checkin: str,
                     checkout: str,
+                    nationality: str,
                     adults: Optional[int] = 1, 
                     childs: Optional[int] = 0,   
                     rooms: Optional[int] = 1,   
-                    nationality: Optional[str] = None,
                     language: Optional[str] = "en",
                     currency: Optional[str] = "USD",
                     child_age: Optional[int] = 0,
@@ -41,10 +41,10 @@ class SearchHotelsFromGDS(BaseTool):
             city=city,
             checkin=checkin,
             checkout=checkout,
+            nationality=nationality,
             adults=adults,
             childs=childs,
             rooms=rooms,
-            nationality=nationality,
             language=language,
             currency=currency,
             child_age=child_age,
