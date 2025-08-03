@@ -5,16 +5,19 @@ from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSourc
 from crewai import  Crew, Process
 import agentops
 from config.config import settings
-from Agent.lookup_hotels import booking_agent, boking_task
+from Agent.lookup_hotels import booking_agent, boking_task, create_crew
 from crewai.memory import LongTermMemory, ShortTermMemory
 from crewai.memory.storage.ltm_sqlite_storage import LTMSQLiteStorage
 from crewai.utilities.paths import db_storage_path
 from crewai.memory.storage.rag_storage import RAGStorage
 import chromadb
-import os 
+import os
+import fcntl
 
 custom_storage_path = "./storage"
 os.makedirs(custom_storage_path, exist_ok=True)
+storage_path = db_storage_path()
+os.environ["CREWAI_STORAGE_DIR"] = str(storage_path )
 
 hotel_router = APIRouter(
     prefix="/api/v1",
@@ -23,7 +26,27 @@ hotel_router = APIRouter(
 
 
 @hotel_router.post("/hotels")
-async def hotel_assistant(query: str, convo_id, user_id):
+async def hotel_assistant(query: str):
+    print("CREWAI_STORAGE_DIR:", os.getenv("CREWAI_STORAGE_DIR"))
+    print("Current working directory:", os.getcwd())
+    print("Computed storage path:", db_storage_path())
+    storage_path = db_storage_path()
+    lock_file = os.path.join(storage_path, ".crewai.lock")
+
+    with open(lock_file, 'w') as f:
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        # Your CrewAI code here
+
+    
+    print(f"Storage path: {storage_path}")
+    print(f"Path exists: {os.path.exists(storage_path)}")
+    print(f"Is writable: {os.access(storage_path, os.W_OK) if os.path.exists(storage_path) else 'Path does not exist'}")
+
+    # Create with proper permissions
+    if not os.path.exists(storage_path):
+        os.makedirs(storage_path, mode=0o755, exist_ok=True)
+        print(f"Created storage directory: {storage_path}")
+
     # Connect to CrewAI's ChromaDB
     storage_path = db_storage_path()
     chroma_path = os.path.join(storage_path, "short_term")
@@ -38,12 +61,6 @@ async def hotel_assistant(query: str, convo_id, user_id):
     else:
         print("No ChromaDB storage found")
 
-    about_company = "Vialink is a company that provides AI solutions to help Travels booking hotel, flighet."
-
-    company_context = StringKnowledgeSource(
-        content=about_company
-    )
-
     
 
     agentops.init(
@@ -52,36 +69,11 @@ async def hotel_assistant(query: str, convo_id, user_id):
     default_tags=['crewai']
     )
   
-    rankyx_crew = Crew(
-    agents=[
-        booking_agent,  
-    ],
-    tasks=[
-        boking_task,
-        ],
-    process=Process.sequential,
-    planning=True,
-    memory=True,
-    long_term_memory=LongTermMemory(
-        storage=LTMSQLiteStorage(
-            db_path=f"{custom_storage_path}/memory.db"
-        )
-    ),
-    short_term_memory=ShortTermMemory(
-        storage=RAGStorage(
-            type="short_term",
-            allow_reset=True,
-        ),
-        path=f"{custom_storage_path}/short_memory"
-        ),
+    crew = create_crew()
     
-    knowledge_sources=[company_context],
     
-)
-    crew_results = await rankyx_crew.kickoff_async(
+    crew_results = await crew.kickoff_async(
     inputs={
-        "user_id": user_id,
-        "convo_id": convo_id,
         "today_date": datetime.now().strftime("%Y-%m-%d"),
         "input": query
     })
