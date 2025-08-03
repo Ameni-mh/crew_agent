@@ -38,7 +38,7 @@ class HotelSearchRequest(BaseModel):
 
     model_config = {
         "populate_by_name": True,
-        "extra": "forbid"
+        "extra": "ignore"
     }
 
 

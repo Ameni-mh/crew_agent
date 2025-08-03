@@ -8,15 +8,17 @@ from Tool.room_tool import save_hotelDetails_roomsOption
 
 class HotelDetailsRequestWrapper(BaseModel):
     request: HotelDetailsRequest 
-    convo_id: str
 
 class SearchDetailsSpecificHotel(BaseTool):
     name: str = "Search Details Specific Hotel"
     description: str = "Search for specific hotel details using GDS API."
     args_schema: BaseModel = HotelDetailsRequestWrapper
 
-    async def _run(self, request: HotelDetailsRequest, convo_id:str) -> str:
+    async def _run(self, **kwargs) -> str:
         try:
+            # Create wrapper from kwargs
+            wrapper = HotelDetailsRequestWrapper(**kwargs)
+            request = wrapper.request
             # Convert to dict for HTTP request
             params = request.model_dump(by_alias=True, exclude_none=True)
 
@@ -28,7 +30,7 @@ class SearchDetailsSpecificHotel(BaseTool):
                 )
             response.raise_for_status()
             response = response.json()
-            await save_hotelDetails_roomsOption(convo_id, response)
+            #await save_hotelDetails_roomsOption(convo_id, response)
             return response.dump(by_alias=True, exclude_none=True)
 
         except (httpx.ReadTimeout, httpx.HTTPStatusError, Exception):
