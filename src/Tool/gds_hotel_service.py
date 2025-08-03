@@ -1,9 +1,8 @@
-from dbm import _error
 from urllib.parse import urljoin
 from crewai.tools import tool
 import httpx
 
-from src.schema.hotel_search_request_schema import HotelSearchRequest
+from schema.hotel_search_request_schema import HotelSearchRequest
 
 from config.config import settings
 
