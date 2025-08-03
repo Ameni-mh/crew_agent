@@ -86,11 +86,6 @@ async def hotel_assistant(query: str, convo_id, user_id):
         "input": query
     })
 
-    result = crew_results.to_dict()
+    result = crew_results
 
-    return JSONResponse(
-            content={
-                "signal": "success",
-                "result": result if result else "No results found",
-            }
-        )
+    return {"result": result}
