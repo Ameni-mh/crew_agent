@@ -42,58 +42,57 @@ class HotelSearchRequest(BaseModel):
     }
 
 
-    @model_validator(mode="before")
-    @classmethod
+    @model_validator(mode="after")
     def validate_dates(cls, values):
         checkin = values.get('checkin')
         checkout = values.get('checkout')
 
         try:
             datetime.strptime(checkin, '%d-%m-%Y')
-            return values
+        
         except ValueError:
-            raise ValueError('Date must be in DD-MM-YYYY format')
+            return "Date must be in DD-MM-YYYY format"
 
         try:
             datetime.strptime(checkout, '%d-%m-%Y')
-            return values
+            
         except ValueError:
-            raise ValueError('Date must be in DD-MM-YYYY format')
+            return "Date must be in DD-MM-YYYY format"
 
         if checkin and checkout:
             if checkout < checkin:
-                raise ValueError("Return date cannot be before departure date.")
+                return "Return date cannot be before departure date."
         return values
 
-    @model_validator(mode="before")
+    @model_validator(mode="after")
     def validate_room(cls, values):
       adults = values.get('adults')
       childs = values.get('childs')
       rooms = values.get('rooms')
 
       if ((adults and adults > 1) or (childs and childs > 0)) and rooms == 1:
-        raise ValueError("should ask for how many rooms you need for your group")
+        return "should ask for how many rooms you need for your group"
       return values
 
-    @model_validator(mode="before")
+    @model_validator(mode="after")
     def validate_child_age(cls, values):
       childs = values.get('childs')
       child_age = values.get('child_age')
 
       if (childs == 0 and child_age != 0) or (childs != 0 and child_age == 0):
-            raise ValueError("valid child age (should be 0 if there are no children)")
+            return "valid child age (should be 0 if there are no children)"
       if childs > 0 and (child_age < 0 or child_age > 17):
-            raise ValueError("a child age between 0 and 17")
+            return "a child age between 0 and 17"
 
       return values
 
-    @model_validator(mode="before")
+    @model_validator(mode="after")
     def validate_price(cls, values):
       price_from = values.get('price_from')
       price_to = values.get('price_to')
 
       if price_from > price_to:
-        raise ValueError("a maximum price that is higher than the minimum price")
+        return "a maximum price that is higher than the minimum price"
 
 
 
