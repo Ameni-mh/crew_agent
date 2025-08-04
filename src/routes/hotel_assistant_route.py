@@ -26,9 +26,10 @@ async def hotel_assistant(query: str):
     result = await agent_executor.ainvoke(inputs,
         config=config
         )
-    messages.append({"human": query, "ai": result["messages"][-1].content})
+    messages.append({"human": query})
 
+    responce = result["output"]
+    #response = result['messages'][-1].content
+    print(result)
 
-    response = result['messages'][-1].content
-
-    return {"result": response}
+    return {"result": responce}
