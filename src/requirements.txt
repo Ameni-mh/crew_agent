@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 pydantic-settings
 crewai[tools,agentops]==0.150.0
+langgraph
 langdetect
 chromadb
 redis

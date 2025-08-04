@@ -1,69 +1,60 @@
 from config.config import settings
 import os
 from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_room_search_payload_from_key, get_selected_rooms_from_key,  save_hotel_search_options, save_hotelDetails_room_options, selected_option_from_key
-from Tool.searchHotelToolGDS import SearchHotelsFromGDS
-from Tool.DetailHotel_tool import SearchDetailsSpecificHotel
 from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, send_shortlink_request_hotelBooking
 from langchain_community.llms import OpenAI
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain_core.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain.memory import ConversationBufferMemory
+from langgraph.prebuilt import create_react_agent
+from langchain_core.messages import AnyMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.prebuilt.chat_agent_executor import AgentState
+from langgraph.prebuilt import create_react_agent
+from langgraph.prebuilt import create_react_agent
+from langgraph.checkpoint.memory import InMemorySaver
+
+
 
 model = ChatOpenAI(model="gpt-4o", temperature=0.0, api_key=settings.openai_api_key)
 
-agnent_prompt = "\n".join([
-       "Your role is to help users with their queries related to Hotel bookings",
-        "You have access to various tools and databases to search for information, and you should utilize them effectively.",
-        "You are an advanced customer support assistant for Vialink, designed to provide comprehensive and accurate assistance to users.",
-        "",
-        "When conducting searches:",
-        "- Be thorough and persistent. If initial searches yield no results, broaden your search parameters.",
-        "- Prioritize finding relevant, up-to-date information.",
-        "- Only conclude a search after exhausting all available options.",
-        "",
-        "If a query is unclear or lacks sufficient information, ask the user for clarification.",
+def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]: 
+
+    date = config["configurable"].get("date")
+
+    system_msg = "\n".join([
+       "You are an advanced customer support assistant for Vialink, designed to provide comprehensive and accurate assistance to users.",
+       "Your role is to help users with their queries related to  bookings, company policies, and other relevant services.",
+       "You have access to various tools and databases to search for information, and you should utilize them effectively.",
+       "",
+       "When conducting searches:",
+       "- Be thorough and persistent. If initial searches yield no results, broaden your search parameters.",
+       "- Prioritize finding relevant, up-to-date information.",
+       "- Only conclude a search after exhausting all available options.",
+       "",
         "Provide responses that are clear, concise, and directly address the user's needs.",
-        "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details",
-        "",
-        "{tools}",
-
-        "Use the following format:",
-
-        "Question: the input question you must answer",
-        "Thought: you should always think about what to do",
-        "Action: the action to take, should be one of [{tool_names}]",
-        "Action Input: the input to the action",
-        "Observation: the result of the action",
-        "... (this Thought/Action/Action Input/Observation can repeat N times)",
-        "Thought: I now know the final answer",
-        "Final Answer: the final answer to the original input question"
-        "Chat history:\n{chat_history}",
-        "Current time:",
-        "{today_date}",
-        "Question: {input}",
-        "Thought:{agent_scratchpad}",
+        "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details.",
+        "If the list of user messages below contains more than one message, do not repeat greetings like 'Hello' and consider the context of all messages together."
+        "current date : {date}"
+        "user messages: {messages}",
         "",
         "Your Response:"
 ])
 
+    
+    return [{"role": "system", "content": system_msg}] + state["messages"]
+
 tools = [Search_Hotels_From_GDS, Search_Details_Specific_Hotel, send_shortlink_request_hotelBooking ]
 
-prompt = PromptTemplate.from_template(agnent_prompt)
 
-memory = ConversationBufferMemory(
-    memory_key="chat_history",   # must match the {chat_history} slot
-    return_messages=True         # so that memory returns full Message objects
-)
 
-agent = create_react_agent(llm=model, tools=tools, prompt=prompt)
-agent_executor = AgentExecutor(
-    agent=agent,
+checkpointer = InMemorySaver()
+
+agent = create_react_agent(
+    model=model,
     tools=tools,
+    prompt=prompt,
     verbose=True,
-    handle_parsing_errors=True,
-    max_iterations=10,         # ← allows up to 10 reasoning steps
-    max_execution_time=120 )
+    checkpointer=checkpointer
+    )
 
 
 

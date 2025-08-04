@@ -1,7 +1,7 @@
 from fastapi import  APIRouter
 from datetime import datetime
 
-from Agent.lookup_hotels import agent_executor
+from Agent.lookup_hotels import agent
 
 
 
@@ -10,25 +10,22 @@ hotel_router = APIRouter(
     tags= ["api_v1"],
 )
 
-config = {"configurable": {"thread_id":"ab22"}}
-messages = []
+config = {"configurable": {"thread_id":"1", "date": datetime.now().strftime("%Y-%m-%d")}}
+#messages = []
 @hotel_router.post("/hotels")
 async def hotel_assistant(query: str):
     
     
     
-    inputs={
-        "today_date": datetime.now().strftime("%Y-%m-%d"),
-        "input": query,
-        "chat_history": messages
+    input={
+        "role" : "user",
+        "content" : query,
     }
     
-    result = await agent_executor.ainvoke(inputs,
-        config=config
-        )
-    messages.append({"human": query})
+    result = await  agent.ainvoke({"messages":[input]},config=config)
+    #messages.append(inputs)
 
-    responce = result["output"]
+    responce =  result["messages"][-1].content
     #response = result['messages'][-1].content
     print(result)
 
