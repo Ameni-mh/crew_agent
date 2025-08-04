@@ -32,14 +32,17 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
        "",
         "Provide responses that are clear, concise, and directly address the user's needs.",
         "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details.",
-        "If the list of user messages below contains more than one message, do not repeat greetings like 'Hello' and consider the context of all messages together."
-        "current date : {date}"
+        "IMPORTANT :",
+        "IMPORTANT:",
+        "Do not accept any past dates.",
+        "Current date: {date}",
         "user messages: {messages}",
         "",
         "Your Response:"
 ])
-
-    
+    print("=========================")
+    print("state message : ", state)
+    print("==================================")
     return [{"role": "system", "content": system_msg}] + state["messages"]
 
 tools = [Search_Hotels_From_GDS, Search_Details_Specific_Hotel, send_shortlink_request_hotelBooking ]
