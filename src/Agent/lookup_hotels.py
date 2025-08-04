@@ -25,16 +25,16 @@ os.makedirs(custom_storage_path, exist_ok=True)
 basic_llm = LLM(model="gpt-4o", temperature=0, api_key=settings.openai_api_key)
 
 booking_agent = Agent(
-    role="Hotel Booking Specialist",
+    role="Travel Booking Specialist",
     goal="\n".join([
-        "Your role is to help users with their queries related to Hotel bookings",
+        "Your role is to help users with their queries related to flight bookings, company policies, and other relevant services.",
         "You have access to various tools and databases to search for information, and you should utilize them effectively.",
     ]),
     backstory="\n".join([
         "You are an advanced customer support assistant for Vialink, designed to provide comprehensive and accurate assistance to users.",
     ]),
     llm=basic_llm,
-    verbose=True,
+    verbose=False,
     tools=[ 
              
             SearchHotelsFromGDS(),
@@ -53,6 +53,7 @@ boking_task = Task(
     "When conducting searches:",
     "- Be thorough and persistent. If initial searches yield no results, broaden your search parameters.",
     "- Prioritize finding relevant, up-to-date information.",
+    "- Always check short-memory first for context.",
     "- Only conclude a search after exhausting all available options.",
     "",
     "If a query is unclear or lacks sufficient information, ask the user for clarification.",
@@ -61,16 +62,14 @@ boking_task = Task(
     "",
     "Current time:",
     "{today_date}",
-    "chat history",
-    "{chat_history}",
     "Question: {input}",
     "",
     "Your Response:"
     ]),
     expected_output="\n".join([
         "A comprehensive, user-friendly response that:",
-        "- Addresses the user's hotel booking needs",
-        "- Provides relevant hotel options or booking assistance", 
+        "- Addresses the user's booking needs",
+        "- Provides relevant options or booking assistance", 
         "- Includes clear next steps or calls-to-action",
         "- Maintains a helpful, professional tone",
         "- Uses the user's preferred language"
@@ -83,7 +82,7 @@ boking_task = Task(
 def create_crew():
     """Create crew with fallback options if memory fails"""
     
-    about_company = "Vialink is a company that provides AI solutions to help Travels booking hotel, flighet."
+    about_company = "Vialink is a company that provides AI solutions to help Travels booking"
     company_context = StringKnowledgeSource(content=about_company)
     
     try:
@@ -97,7 +96,8 @@ def create_crew():
                 agents=[booking_agent],
                 tasks=[boking_task],
                 process=Process.sequential,
-                planning=True,
+                planning=False,
+                verbose=True,
                 memory=True,
                 knowledge_sources=[company_context],
             )
@@ -107,15 +107,7 @@ def create_crew():
             print(f"Failed to create crew with memory: {memory_error}")
             print("Falling back to crew without persistent memory...")
     
-    crew = Crew(
-                agents=[booking_agent],
-                tasks=[boking_task],
-                process=Process.sequential,
-                planning=True,
-                memory=False,
-                knowledge_sources=[company_context],
-            )
-    return crew
+    
 
             
     

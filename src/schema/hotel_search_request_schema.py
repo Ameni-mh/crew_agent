@@ -37,10 +37,10 @@ class HotelSearchRequest(BaseModel):
     rating: Optional[int]  = Field(default=None, description="Hotel rating filter")
     user_type: Optional[str]   = Field(default=None, description="") 
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        extra="ignore"  # This allows extra fields from CrewAI
-    )
+    #model_config = ConfigDict(
+       # populate_by_name=True,
+       # extra="ignore"  # This allows extra fields from CrewAI
+    #)
 
 
     @model_validator(mode="after")

@@ -3,7 +3,6 @@ from datetime import datetime
 from fastapi.responses import JSONResponse
 from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
 from crewai import  Crew, Process
-import agentops
 from config.config import settings
 from Agent.lookup_hotels import booking_agent, boking_task, create_crew
 from crewai.memory import LongTermMemory, ShortTermMemory
@@ -27,6 +26,8 @@ hotel_router = APIRouter(
 messages= []
 @hotel_router.post("/hotels")
 async def hotel_assistant(query: str):
+    # Reset specific memory types
+
     print("CREWAI_STORAGE_DIR:", os.getenv("CREWAI_STORAGE_DIR"))
     print("Current working directory:", os.getcwd())
     print("Computed storage path:", db_storage_path())
@@ -62,14 +63,12 @@ async def hotel_assistant(query: str):
         print("No ChromaDB storage found")
 
     
-
-    agentops.init(
-    api_key=settings.agentops_api_key,
-    skip_auto_end_session=True,
-    default_tags=['crewai']
-    )
   
     crew = create_crew()
+    #crew.reset_memories(command_type='short')     # Short-term memory
+    #crew.reset_memories(command_type='long')      # Long-term memory
+    #crew.reset_memories(command_type='entity')    # Entity memory
+    #crew.reset_memories(command_type='knowledge')
     
     message = {"Human" : query }
     messages.append(message)
@@ -79,9 +78,9 @@ async def hotel_assistant(query: str):
     inputs={
         "today_date": datetime.now().strftime("%Y-%m-%d"),
         "input": query,
-        "chat_history": messages
+        
     })
-    
+    #"chat_history": messages
 
     result = crew_results
 
