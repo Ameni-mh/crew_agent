@@ -6,59 +6,12 @@ import json
 from config.config import settings
 from langchain.tools.base import tool
 
-@tool        
-async def Search_Hotels_From_GDS( 
-                    city: str,
-                    checkin: str,
-                    checkout: str,
-                    nationality: str,
-                    adults: Optional[int] = 1, 
-                    childs: Optional[int] = 0,   
-                    rooms: Optional[int] = 1,   
-                    language: Optional[str] = "en",
-                    currency: Optional[str] = "USD",
-                    child_age: Optional[int] = 0,
-                    pagination: Optional[int] = 1,
-                    price_from: Optional[int] = None,
-                    price_to: Optional[int] = None,
-                    ip: Optional[str] = None,
-                    module_name: Optional[str] = "hotels",
-                    rating: Optional[int] = None,
-                    user_type: Optional[str] = None
-                   ) -> str:
+from schema.hotel_details_request_schema import HotelDetailsRequest
+       
+async def Search_Hotels_From_GDS( request : HotelSearchRequest) -> str:
         """Search for available hotels via external GDS."""
         
-        request = HotelSearchRequest(
-            city=city,
-            checkin=checkin,
-            checkout=checkout,
-            nationality=nationality,
-            adults=adults,
-            childs=childs,
-            rooms=rooms,
-            language=language,
-            currency=currency,
-            child_age=child_age,
-            pagination=pagination,
-            price_from=price_from,
-            price_to=price_to,
-            ip=ip,
-            module_name=module_name,
-            rating=rating,
-            user_type=user_type
-        )
         try:
-            room_search_payload = {
-                    "checkin": request.checkin,
-                    "checkout": request.checkout,
-                    "adults": getattr(request, "adults", 1),
-                    "childs": getattr(request, "childs", 0),
-                    "child_age": getattr(request, "childs_age", 0),
-                    "rooms": request.rooms,
-                    "language": getattr(request, "language", "en"),
-                    "currency": getattr(request, "currency", ""),
-                    "nationality":request.nationality,
-                }
 
             # Convert to dict for HTTP request
             params = request.model_dump(by_alias=True, exclude_none=True)
@@ -78,8 +31,8 @@ async def Search_Hotels_From_GDS(
         except httpx.HTTPStatusError:
             return "We ran into an issue finding hotels for you."
         
-@tool
-async def Search_Details_Specific_Hotel(request) -> str:
+
+async def Search_Details_Specific_Hotel(request: HotelDetailsRequest) -> str:
         """Search for specific hotel details using GDS API."""
         try:
             
@@ -102,8 +55,8 @@ async def Search_Details_Specific_Hotel(request) -> str:
             
 
         
-@tool
-async def send_shortlink_request_hotelBooking(self, conversationID, option, accountID):
+
+async def send_shortlink_request_hotelBooking(self, conversationID, option, accountID) -> str:
         """ Sends a request to the GDS API to create a short link for hotel booking."""
         gds_checkout_url = (urljoin(settings.gds_base_url, "/shortLink"),)
 

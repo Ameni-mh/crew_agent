@@ -45,8 +45,8 @@ class HotelSearchRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_dates(cls, values):
-        checkin = values.get('checkin')
-        checkout = values.get('checkout')
+        checkin = values['checkin']
+        checkout = values['chckout']
 
         try:
             datetime.strptime(checkin, '%d-%m-%Y')
@@ -67,9 +67,9 @@ class HotelSearchRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_room(cls, values):
-      adults = values.get('adults')
-      childs = values.get('childs')
-      rooms = values.get('rooms')
+      adults = values['adults']
+      childs = values['childs']
+      rooms = values['rooms']
 
       if ((adults and adults > 1) or (childs and childs > 0)) and rooms == 1:
         return "should ask for how many rooms you need for your group"
@@ -77,8 +77,8 @@ class HotelSearchRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_child_age(cls, values):
-      childs = values.get('childs')
-      child_age = values.get('child_age')
+      childs = values['childs']
+      child_age = values['child_age']
 
       if (childs == 0 and child_age != 0) or (childs != 0 and child_age == 0):
             return "valid child age (should be 0 if there are no children)"
@@ -89,8 +89,8 @@ class HotelSearchRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_price(cls, values):
-      price_from = values.get('price_from')
-      price_to = values.get('price_to')
+      price_from = values['price_from']
+      price_to = values['price_to']
 
       if price_from > price_to:
         return "a maximum price that is higher than the minimum price"
