@@ -44,7 +44,7 @@ booking_agent = Agent(
     reasoning=True,
     max_reasoning_attempts=2,
     memory= True, 
-    max_execution_time=30   
+    max_execution_time=30, 
 )
 
 
@@ -60,6 +60,12 @@ boking_task = Task(
     "Provide responses that are clear, concise, and directly address the user's needs.",
     "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details",
     "",
+    "IMPORTANT: Always check your memory for relevant information before responding.",
+    "When writing responses:",
+    "1. First review what you learned in previous tasks",
+    "2. Reference specific findings from your memory",
+    "3. Build upon previous conclusions",
+    "4. Explicitly mention how current work relates to past discoveries",
     "Current time:",
     "{today_date}",
     "Question: {input}",

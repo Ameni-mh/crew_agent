@@ -83,5 +83,6 @@ async def hotel_assistant(query: str):
     #"chat_history": messages
 
     result = crew_results
-
+    
+    
     return {"result": result}
