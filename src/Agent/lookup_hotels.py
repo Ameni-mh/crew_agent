@@ -19,6 +19,7 @@ class State(AgentState):
     # NOTE: we're adding this key to keep track of previous summary information
     # to make sure we're not summarizing on every LLM call
     context: dict[str, RunningSummary]
+    current_state : str ="Focus on hotel search parameters, preferences, and results."
 
 model = ChatOpenAI(model="gpt-4o", temperature=0.0, api_key=settings.openai_api_key)
 
@@ -40,6 +41,8 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
        "",
         "Provide responses that are clear, concise, and directly address the user's needs.",
         "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details.",
+        "CONTEXT",
+        {state["current_state"]},
         "IMPORTANT:",
         "- Do not accept any past dates.",
         f"- Current date: {date}",
@@ -48,7 +51,7 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
         "Your Response:"
 ])
     print("=========================")
-    print("state message : ", state["messages"])
+    print("state message : ", state)
     print("==================================")
     return [{"role": "system", "content": system_msg}] + state["messages"]
 

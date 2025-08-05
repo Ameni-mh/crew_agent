@@ -5,15 +5,18 @@ from schema.hotel_search_request_schema import HotelSearchRequest
 import json
 from config.config import settings
 from langchain.tools.base import tool
-
+from langchain_core.tools import InjectedToolCallId
+from langchain_core.runnables import RunnableConfig
 from schema.hotel_details_request_schema import HotelDetailsRequest
 from Tool.redis_tool import save_hotel_search_options
 from Tool.room_tool import save_hotelDetails_roomsOption
-
-
+from langgraph.types import Command
+from typing import Annotated
+from langgraph.prebuilt.chat_agent_executor import AgentState
 
 @tool      
-async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest) -> str:
+async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
+                                 state: AgentState ) -> str:
         """Search for available hotels via an external Global Distribution System (GDS).
             Args:
                 conversationID (str): Unique identifier for the current conversation.
@@ -49,6 +52,11 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest) -> 
                 response = response.json()
             
                 await save_hotel_search_options(convo_id, response.get("response"), room_search_payload)
+                #TODO: should verife if retrun list or no available
+                #if not response.get("status") == "False":
+                state["current_state"] = "\n".join(["Hotel option already saved",
+                                                    "Focus on booking rooms, confirmations, and next steps."])
+                print("current agent state :", state.get("current_state"))
                 return json.dumps(response, indent=2)   
 
         except httpx.HTTPStatusError:
