@@ -12,8 +12,9 @@ async def startup_span():
     async with (
         AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer,
         AsyncRedisStore.from_conn_string(settings.redis_url) as store):
-        await checkpointer.asetup()
-        await store.setup()
+        #await checkpointer.asetup()
+        #await store.setup()
+        app.store = store
         app.agent =  create_react_agent(
             model=model,
             tools=tools,
