@@ -87,8 +87,8 @@ async def send_shortlink_request_hotelBooking(accountID:str, conversationID : st
             "option": int(option),
             "type": "hotel_booking",
         }
-
-        headers = {"Content-Type": "application/json", "x-api-key": self.GDS_API_KEY}
+        
+        headers = {"Content-Type": "application/json", "x-api-key": settings.gds_api_key}
 
         try:
             async with httpx.AsyncClient() as client:
