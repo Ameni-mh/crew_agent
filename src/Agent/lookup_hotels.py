@@ -28,7 +28,7 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
     date = config["configurable"].get("date")
     thread_id = config["configurable"].get("thread_id")
     user_id = config["configurable"].get("user_id")
-
+    context = state.get("current_state")
     system_msg = "\n".join([
        "You are an advanced customer support assistant for Vialink, designed to provide comprehensive and accurate assistance to users.",
        "Your role is to help users with their queries related to  bookings, company policies, and other relevant services.",
@@ -42,7 +42,7 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
         "Provide responses that are clear, concise, and directly address the user's needs.",
         "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details.",
         "CONTEXT",
-        {state["current_state"]},
+        f"{context}",
         "IMPORTANT:",
         "- Do not accept any past dates.",
         f"- Current date: {date}",
