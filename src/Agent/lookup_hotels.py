@@ -25,6 +25,8 @@ model = ChatOpenAI(model="gpt-4o", temperature=0.0, api_key=settings.openai_api_
 def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]: 
 
     date = config["configurable"].get("date")
+    thread_id = config["configurable"].get("thread_id")
+    user_id = config["configurable"].get("user_id")
 
     system_msg = "\n".join([
        "You are an advanced customer support assistant for Vialink, designed to provide comprehensive and accurate assistance to users.",
@@ -40,9 +42,8 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
         "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details.",
         "IMPORTANT:",
         "- Do not accept any past dates.",
-        "- Current date: {date}",
-        "- For some tools, you will need the conversation ID: {thread_id} and user ID: {user_id}",
-        "user messages: {messages}",
+        f"- Current date: {date}",
+        f"- For some tools, you will need the conversation ID: {thread_id} and user ID: {user_id}",
         "",
         "Your Response:"
 ])
