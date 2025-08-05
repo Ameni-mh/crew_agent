@@ -7,3 +7,4 @@ langdetect
 chromadb
 redis
 langgraph-checkpoint-redis
+langmem
