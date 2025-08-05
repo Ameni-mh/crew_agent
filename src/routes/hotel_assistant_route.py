@@ -10,12 +10,13 @@ hotel_router = APIRouter(
     tags= ["api_v1"],
 )
 
-config = {"configurable": {"thread_id":"1", "date": datetime.now().strftime("%Y-%m-%d")}}
-#messages = []
+
+
 @hotel_router.post("/hotels")
-async def hotel_assistant(query: str):
-    
-    
+async def hotel_assistant(query: str, user_id:str, con_id: str):
+    config = {"configurable": {"thread_id":con_id, 
+                               "date": datetime.now().strftime("%d-%m-%y"),
+                               "user_id": user_id}}
     
     input={
         "role" : "user",
@@ -23,10 +24,10 @@ async def hotel_assistant(query: str):
     }
     
     result = await  agent.ainvoke({"messages":[input]},config=config)
-    #messages.append(inputs)
+    
 
     responce =  result["messages"][-1].content
-    #response = result['messages'][-1].content
+    
     print(result)
 
     return {"result": responce}

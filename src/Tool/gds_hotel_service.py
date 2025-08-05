@@ -7,11 +7,27 @@ from config.config import settings
 from langchain.tools.base import tool
 
 from schema.hotel_details_request_schema import HotelDetailsRequest
-       
-async def Search_Hotels_From_GDS( request : HotelSearchRequest) -> str:
+from Tool.redis_tool import save_hotel_search_options
+
+
+
+@tool      
+async def Search_Hotels_From_GDS( request : HotelSearchRequest, convo_id:str) -> str:
         """Search for available hotels via external GDS."""
         
         try:
+
+            room_search_payload = {
+                    "checkin": request.checkin,
+                    "checkout": request.checkout,
+                    "adults": getattr(request, "adults", 1),
+                    "childs": getattr(request, "childs", 0),
+                    "child_age": getattr(request, "childs_age", 0),
+                    "rooms": request.rooms,
+                    "language": getattr(request, "language", "en"),
+                    "currency": getattr(request, "currency", ""),
+                    "nationality":request.nationality,
+                }
 
             # Convert to dict for HTTP request
             params = request.model_dump(by_alias=True, exclude_none=True)
@@ -25,7 +41,7 @@ async def Search_Hotels_From_GDS( request : HotelSearchRequest) -> str:
                 response.raise_for_status()
                 response = response.json()
             
-                #await save_hotel_search_options(convo_id, response.get("response"), room_search_payload)
+                await save_hotel_search_options(convo_id, response.get("response"), room_search_payload)
                 return json.dumps(response, indent=2)   
 
         except httpx.HTTPStatusError:
@@ -56,8 +72,13 @@ async def Search_Details_Specific_Hotel(request: HotelDetailsRequest) -> str:
 
         
 
-async def send_shortlink_request_hotelBooking(self, conversationID, option, accountID) -> str:
-        """ Sends a request to the GDS API to create a short link for hotel booking."""
+async def send_shortlink_request_hotelBooking(accountID:str, conversationID : str, option: int ) -> str:
+        """ Sends a request to the GDS API to generate a short booking link for a selected hotel.
+        Arguments: 
+            accountID (str): The unique identifier of the user account.
+            conversationID (str): The unique identifier of the current conversation or session.
+            option (int): The index or number corresponding to the selected hotel option.
+        Returns: A str representing the generated short booking link."""
         gds_checkout_url = (urljoin(settings.gds_base_url, "/shortLink"),)
 
         payload = {

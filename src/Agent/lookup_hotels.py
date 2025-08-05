@@ -32,10 +32,10 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
        "",
         "Provide responses that are clear, concise, and directly address the user's needs.",
         "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details.",
-        "IMPORTANT :",
         "IMPORTANT:",
-        "Do not accept any past dates.",
-        "Current date: {date}",
+        "- Do not accept any past dates.",
+        "- Current date: {date}",
+        "- For some tools, you will need the conversation ID: {thread_id} and user ID: {user_id}",
         "user messages: {messages}",
         "",
         "Your Response:"
