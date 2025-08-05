@@ -8,12 +8,19 @@ from langchain.tools.base import tool
 
 from schema.hotel_details_request_schema import HotelDetailsRequest
 from Tool.redis_tool import save_hotel_search_options
+from Tool.room_tool import save_hotelDetails_roomsOption
 
 
 
 @tool      
-async def Search_Hotels_From_GDS( request : HotelSearchRequest, convo_id:str) -> str:
-        """Search for available hotels via external GDS."""
+async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest) -> str:
+        """Search for available hotels via an external Global Distribution System (GDS).
+            Args:
+                conversationID (str): Unique identifier for the current conversation.
+                request (HotelSearchRequest): Structured request containing hotel search parameters.
+            Returns:
+                str: A message containing the hotel search result or a notice indicating no availability.
+        """
         
         try:
 
@@ -48,14 +55,20 @@ async def Search_Hotels_From_GDS( request : HotelSearchRequest, convo_id:str) ->
             return "We ran into an issue finding hotels for you."
         
 
-async def Search_Details_Specific_Hotel(request: HotelDetailsRequest) -> str:
-        """Search for specific hotel details using GDS API."""
+async def Search_Details_Specific_Hotel(convo_id : str, request: HotelDetailsRequest) -> str:
+        """Search for specific hotel details via an external Global Distribution System (GDS).
+            Args:
+                conversationID (str): Unique identifier for the current conversation.
+                request (HotelDetailsRequest): Structured request containing hotel details parameters.
+            Returns:
+                str: A message containing the hotel details result or a notice indicating no availability.
+        """
         try:
             
             # Convert to dict for HTTP request
             params = request.model_dump(by_alias=True, exclude_none=True)
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
                     urljoin(settings.gds_base_url, "/api/hotel_details"),
                     data=params,
@@ -63,7 +76,7 @@ async def Search_Details_Specific_Hotel(request: HotelDetailsRequest) -> str:
                 )
             response.raise_for_status()
             response = response.json()
-            #await save_hotelDetails_roomsOption(convo_id, response)
+            await save_hotelDetails_roomsOption(convo_id, response)
             return response.dump(by_alias=True, exclude_none=True)
 
         except (httpx.ReadTimeout, httpx.HTTPStatusError, Exception):
@@ -73,11 +86,11 @@ async def Search_Details_Specific_Hotel(request: HotelDetailsRequest) -> str:
         
 
 async def send_shortlink_request_hotelBooking(accountID:str, conversationID : str, option: int ) -> str:
-        """ Sends a request to the GDS API to generate a short booking link for a selected hotel.
+        """ Generates a short booking link for a selected hotel via the GDS API, triggered when the user confirms their room selection.
         Arguments: 
-            accountID (str): The unique identifier of the user account.
-            conversationID (str): The unique identifier of the current conversation or session.
-            option (int): The index or number corresponding to the selected hotel option.
+            accountID (str): Unique identifier of the user account.
+            conversationID (str): Unique identifier of the current conversation or session.
+            option (int): Index corresponding to the selected hotel option.
         Returns: A str representing the generated short booking link."""
         gds_checkout_url = (urljoin(settings.gds_base_url, "/shortLink"),)
 
