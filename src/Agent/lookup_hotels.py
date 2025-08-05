@@ -10,6 +10,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.redis import RedisSaver
 from langmem.short_term import SummarizationNode, RunningSummary
 from langchain_core.messages.utils import count_tokens_approximately
 
@@ -52,9 +53,9 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
 
 tools = [Search_Hotels_From_GDS, Search_Details_Specific_Hotel, send_shortlink_request_hotelBooking ]
 
+ 
 
-
-checkpointer = InMemorySaver()
+#checkpointer = InMemorySaver()
 
 summarization_node = SummarizationNode( 
     token_counter=count_tokens_approximately,
@@ -63,16 +64,17 @@ summarization_node = SummarizationNode(
     max_summary_tokens=128,
     output_messages_key="llm_input_messages",
 )
-
-agent = create_react_agent(
-    model=model,
-    tools=tools,
-    prompt=prompt,
-    verbose=True,
-    checkpointer=checkpointer,
-    pre_model_hook= summarization_node,
-    state_schema=State
-    )
+with RedisSaver.from_conn_string(settings.redis_url) as checkpointer:
+    checkpointer.setup()
+    agent = create_react_agent(
+        model=model,
+        tools=tools,
+        prompt=prompt,
+        verbose=True,
+        checkpointer=checkpointer,
+        pre_model_hook= summarization_node,
+        state_schema=State
+        )
 
 
 
