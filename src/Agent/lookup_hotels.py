@@ -9,10 +9,15 @@ from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph.prebuilt import create_react_agent
-from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import InMemorySaver
+from langmem.short_term import SummarizationNode, RunningSummary
+from langchain_core.messages.utils import count_tokens_approximately
 
 
+class State(AgentState):
+    # NOTE: we're adding this key to keep track of previous summary information
+    # to make sure we're not summarizing on every LLM call
+    context: dict[str, RunningSummary]
 
 model = ChatOpenAI(model="gpt-4o", temperature=0.0, api_key=settings.openai_api_key)
 
@@ -41,7 +46,7 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
         "Your Response:"
 ])
     print("=========================")
-    print("state message : ", state)
+    print("state message : ", state["messages"])
     print("==================================")
     return [{"role": "system", "content": system_msg}] + state["messages"]
 
@@ -51,12 +56,22 @@ tools = [Search_Hotels_From_GDS, Search_Details_Specific_Hotel, send_shortlink_r
 
 checkpointer = InMemorySaver()
 
+summarization_node = SummarizationNode( 
+    token_counter=count_tokens_approximately,
+    model=model,
+    max_tokens=384,
+    max_summary_tokens=128,
+    output_messages_key="llm_input_messages",
+)
+
 agent = create_react_agent(
     model=model,
     tools=tools,
     prompt=prompt,
     verbose=True,
-    checkpointer=checkpointer
+    checkpointer=checkpointer,
+    pre_model_hook= summarization_node,
+    state_schema=State
     )
 
 
