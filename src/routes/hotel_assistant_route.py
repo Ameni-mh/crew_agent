@@ -1,7 +1,6 @@
 from fastapi import  APIRouter, Request
 from datetime import datetime
 
-from Agent.lookup_hotels import agent
 
 
 
