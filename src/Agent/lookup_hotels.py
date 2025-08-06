@@ -1,6 +1,6 @@
 from config.config import settings
 import os
-from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_room_search_payload_from_key, get_selected_rooms_from_key,  save_hotel_search_options, save_hotelDetails_room_options, selected_option_from_key
+from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_hotel_search_options, get_room_search_payload_from_key, get_selected_rooms_from_key,  save_hotel_search_options, save_hotelDetails_room_options, selected_option_from_key
 from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, send_shortlink_request_hotelBooking
 from langchain_community.llms import OpenAI
 from langchain_openai import ChatOpenAI
@@ -32,15 +32,20 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
     system_msg = "\n".join([
        "You are an advanced customer support assistant for Vialink, designed to provide comprehensive and accurate assistance to users.",
        "Your role is to help users with their queries related to  bookings, company policies, and other relevant services.",
-       "You have access to various tools and databases to search for information, and you should utilize them effectively.",
+       "You have access to various tools and databases to search for and retrieve information, and you should utilize them effectively.",
        "",
        "When conducting searches:",
        "- Be thorough and persistent. If initial searches yield no results, broaden your search parameters.",
        "- Prioritize finding relevant, up-to-date information.",
        "- Only conclude a search after exhausting all available options.",
        "",
+       "When a list of items is returned from the GDS (e.g., hotels, hotel rooms, flights, cars),",
+        "- Format the list in a clear, user-friendly way.",
+        "- Prompt the user to select one option to proceed with the next step (e.g., booking, confirmation, or viewing details).",
+        "",
         "Provide responses that are clear, concise, and directly address the user's needs.",
-        "When you are uncertain, it's better to inform the user that you're unable to find the specific information rather than provide incorrect details.",
+        "If uncertain, inform the user that you're unable to find the specific information, rather than providing potentially incorrect details.",
+        "",
         "CONTEXT",
         f"{context}",
         "IMPORTANT:",
@@ -55,7 +60,10 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
     print("==================================")
     return [{"role": "system", "content": system_msg}] + state["messages"]
 
-tools = [Search_Hotels_From_GDS, Search_Details_Specific_Hotel, send_shortlink_request_hotelBooking ]
+tools = [Search_Hotels_From_GDS,
+        Search_Details_Specific_Hotel,
+        send_shortlink_request_hotelBooking, 
+        ]
 
 
 
