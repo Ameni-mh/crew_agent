@@ -1,7 +1,7 @@
 from typing import Optional
 from redis.asyncio import Redis
 from config.config import settings
-from crewai.tools import tool
+from langchain.tools.base import tool
 
 redis_url = settings.redis_url
 redis = Redis.from_url(redis_url, decode_responses=True)
@@ -65,14 +65,12 @@ async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):
     except Exception as e:
         return "Error saving hotel details and room options."
 
-@tool
+@tool(name_or_callable="hotel_option_from_redis")
 async def get_hotel_search_options(convo_id: str) -> list:
     """
-    Retrieve saved hotel search options from Redis.
-    
+    Retrieve saved hotel options options from Redis.
     Args:
         convo_id (str): Unique conversation identifier
-    
     Returns:
         list: List of hotel offers, or error message if not found
     """
@@ -84,7 +82,7 @@ async def get_hotel_search_options(convo_id: str) -> list:
     
     return "/n".join(offers)
 
-@tool
+
 async def change_option_status_hotel_offer(
     convo_id: str,
     selected_option: int,
@@ -144,7 +142,7 @@ async def change_option_status_hotel_offer(
         print(f"Error changing option status: {e}")
         return f"Error: {str(e)}"
 
-@tool
+
 async def selected_option_from_key(convo_id: str) -> dict:
     """
     Retrieve the currently selected hotel option from Redis.
@@ -185,7 +183,7 @@ async def selected_option_from_key(convo_id: str) -> dict:
     except Exception as e:
         return "Error reading from Redis"
 
-@tool
+
 async def get_room_search_payload_from_key(convo_id: str):
     """
     Retrieve the room search criteria and guest preferences from Redis.
@@ -208,7 +206,7 @@ async def get_room_search_payload_from_key(convo_id: str):
 
     return room_search_payload_details[0]
 
-@tool
+
 async def get_selected_rooms_from_key(convo_id: str) -> dict:
     """
     Retrieve all selected rooms and their quantities from Redis.
@@ -244,7 +242,7 @@ async def get_selected_rooms_from_key(convo_id: str) -> dict:
     except Exception as e:
         return "No rooms selected."
 
-@tool
+
 async def get_rooms_name(convo_id: str) -> list[str]:
     """
     Retrieve list of available room names for a hotel.
@@ -276,7 +274,7 @@ async def get_rooms_name(convo_id: str) -> list[str]:
     except Exception as e:
         return "Error retrieving room names."
 
-@tool
+
 async def mark_rooms_selected(convo_id: str, selected_option:str, additional_selected_count: int):
     """
     Update the quantity of selected rooms for a specific room type.
@@ -321,14 +319,12 @@ async def mark_rooms_selected(convo_id: str, selected_option:str, additional_sel
     except Exception:
         return "Error updating selected rooms."
 
-@tool
+@tool(name_or_callable="rooms_option_from_redis")
 async def get_all_rooms_from_key(convo_id: str):
     """
-    Retrieve complete information for all available rooms.
-    
+    Retrieve complete information for all available rooms of last selected hotel.
     Args:
         convo_id (str): Unique conversation identifier
-    
     Returns:
         str: Formatted string containing all room details or error message
     """
