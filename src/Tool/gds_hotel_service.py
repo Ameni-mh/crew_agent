@@ -15,7 +15,7 @@ from langgraph.types import Command
 from langchain_core.messages import ToolMessage
 from typing import Annotated
 from langgraph.prebuilt.chat_agent_executor import AgentState
-from schema.agent_context import AgentContext, update_agent_context
+from schema.agent_context import AgentContext
 
 @tool(name_or_callable="Lookup_hotels")     
 async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
@@ -65,17 +65,40 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                 
                 return Command(update={
                     "current_state": context,
-                    # update the message history
+                    "room_search_payload": room_search_payload,
+                    "hotels": response,
                     "messages": [
                         ToolMessage(
-                            context+"\n"+json.dumps(response, indent=2),
+                            json.dumps(response, indent=2),
                             tool_call_id=tool_call_id
                         )
                     ]
                 })
 
         except httpx.HTTPStatusError:
-            return "We ran into an issue finding hotels for you."             
+            return "We ran into an issue finding hotels for you." 
+
+@tool(name_or_callable="gds_data_from_memory")
+async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
+):
+    """
+    Lists information retrieved from the GDS (Global Distribution System), including:
+    - Room search payload used for room queries.
+    - List of available hotels returned from the search.
+    """
+    
+    memory = []
+    if state["room_search_payload"]:
+          memory.append("Room Search Payload : \n"+json.dumps(state["room_search_payload"], indent=2))
+
+    if state["hotels"] :
+         memory.append(json.dumps(state["hotels"], indent=2))
+  
+
+    if not state["hotels"] and not state["room_search_payload"]:
+         return "No memory of any list yet"
+    
+    return "\n".join(memory)
         
 @tool(name_or_callable="look_up_rooms_for_Hotel_Selected")
 async def Search_Details_Specific_Hotel(convo_id : str, 

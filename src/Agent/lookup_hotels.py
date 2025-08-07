@@ -1,6 +1,6 @@
 from config.config import settings
 from Tool.redis_tool import  get_hotel_search_options, get_room_search_payload_from_key
-from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, send_shortlink_request_hotelBooking
+from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, memory_gds_data, send_shortlink_request_hotelBooking
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import InjectedState
 from langchain_core.messages import AnyMessage
@@ -37,6 +37,9 @@ def prompt(state:AgentState, config: RunnableConfig) -> list[AnyMessage]:
         "- Format the list in a clear, user-friendly way.",
         "- Prompt the user to select one option to proceed with the next step (e.g., booking, confirmation, or viewing details).",
         "",
+        "If any important information appears to be missing due to summarized context or memory loss,",
+        "- Use the `gds_data_from_memory` tool to retrieve the full GDS data.",
+        "",
         "Provide responses that are clear, concise, and directly address the user's needs.",
         "If uncertain, inform the user that you're unable to find the specific information, rather than providing potentially incorrect details.",
         "",
@@ -57,6 +60,7 @@ def prompt(state:AgentState, config: RunnableConfig) -> list[AnyMessage]:
 tools = [Search_Hotels_From_GDS,
         Search_Details_Specific_Hotel,
         send_shortlink_request_hotelBooking,
+        memory_gds_data
         ]
 
 

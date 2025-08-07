@@ -7,7 +7,7 @@ from langgraph.graph import  MessagesState
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from langgraph.prebuilt import InjectedState
 from Agent.lookup_hotels import AgentContext
-from schema.agent_context import update_agent_context
+
 
 
 hotel_router = APIRouter(

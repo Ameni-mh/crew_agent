@@ -9,10 +9,9 @@ class AgentContext(AgentState):
     # NOTE: we're adding this key to keep track of previous summary information
     # to make sure we're not summarizing on every LLM call
     context: dict[str, RunningSummary]
+    hotels: dict
+    room_search_payload: dict
     current_state : str = "Focus on hotel search parameters, preferences, and results."
 
              
              
-def update_agent_context(context:str) -> Command:
-    agent_context: Annotated[AgentContext, InjectedState]
-    return Command(update={agent_context["current_state"]: context})
