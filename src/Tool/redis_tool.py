@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from redis.asyncio import Redis
 from config.config import settings
@@ -68,7 +69,7 @@ async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):
 @tool(name_or_callable="hotel_option_from_redis")
 async def get_hotel_search_options(convo_id: str) -> list:
     """
-    Retrieve saved hotel options options from Redis.
+    Retrieve saved hotel options from Redis using the conversation ID, after they have been provided by the GDS (Global Distribution System).
     Args:
         convo_id (str): Unique conversation identifier
     Returns:
@@ -183,7 +184,7 @@ async def selected_option_from_key(convo_id: str) -> dict:
     except Exception as e:
         return "Error reading from Redis"
 
-
+@tool
 async def get_room_search_payload_from_key(convo_id: str):
     """
     Retrieve the room search criteria and guest preferences from Redis.
@@ -204,7 +205,7 @@ async def get_room_search_payload_from_key(convo_id: str):
     ):
         return None
 
-    return room_search_payload_details[0]
+    return json.dumps(room_search_payload_details[0], indent=2)
 
 
 async def get_selected_rooms_from_key(convo_id: str) -> dict:
