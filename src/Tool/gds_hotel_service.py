@@ -5,25 +5,29 @@ from schema.hotel_search_request_schema import HotelSearchRequest
 import json
 from config.config import settings
 from langchain.tools.base import tool
-from langchain_core.tools import InjectedToolCallId
+from langgraph.prebuilt import InjectedState
 from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import InjectedToolCallId
 from schema.hotel_details_request_schema import HotelDetailsRequest
 from Tool.redis_tool import save_hotel_search_options, save_hotelDetails_room_options
 from Tool.room_tool import save_hotelDetails_roomsOption
 from langgraph.types import Command
+from langchain_core.messages import ToolMessage
 from typing import Annotated
 from langgraph.prebuilt.chat_agent_executor import AgentState
+from schema.agent_context import AgentContext, update_agent_context
 
 @tool(name_or_callable="Lookup_hotels")     
 async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
-                                 state: AgentState ) -> str:
+                                 tool_call_id: Annotated[str, InjectedToolCallId],
+ ) -> str:
         """Look up for available hotels via an external Global Distribution System (GDS).
             Args:
                 conversationID (str): Unique identifier for the current conversation.
                 request (HotelSearchRequest): Structured request containing hotel search parameters.
-                state (AgentState) : state of agent
+                tool_call_id (str): Identifier for this tool call
             Returns:
-                str: A message containing the hotel search result or a notice indicating no availability.
+                Command: Contains hotel search results and updated agent state
         """
         
         try:
@@ -55,26 +59,35 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                 await save_hotel_search_options(convo_id, response.get("response"), room_search_payload)
                 #TODO: should verife if retrun list or no available
                 #if not response.get("status") == "False":
-                state["current_state"] = "\n".join(["Hotel option already saved",
+                context = "\n".join(["NOTE: Hotel option already saved. Keep just this list in your mind.",
                                                     "Focus on booking rooms,  and next steps."])
-                print("current agent state :", state.get("current_state"))
-                return json.dumps(response, indent=2)   
+    
+                
+                return Command(update={
+                    "current_state": context,
+                    # update the message history
+                    "messages": [
+                        ToolMessage(
+                            context+"\n"+json.dumps(response, indent=2),
+                            tool_call_id=tool_call_id
+                        )
+                    ]
+                })
 
         except httpx.HTTPStatusError:
-            return "We ran into an issue finding hotels for you."
-        
+            return "We ran into an issue finding hotels for you."             
         
 @tool(name_or_callable="look_up_rooms_for_Hotel_Selected")
 async def Search_Details_Specific_Hotel(convo_id : str, 
                                         request: HotelDetailsRequest,
-                                        state: AgentState) -> str:
+                                        tool_call_id: Annotated[str, InjectedToolCallId]) -> str:
         """Look up rooms for specific hotel  via an external Global Distribution System (GDS).
             Args:
                 conversationID (str): Unique identifier for the current conversation.
                 request (HotelDetailsRequest): Structured request containing lookup rooms parameters.
-                state (AgentState) : agent state
+                tool_call_id (str): Identifier for this tool call
             Returns:
-                str: A message containing the rooms result or a notice indicating no availability.
+                Command: Contains the rooms search results and updated agent state.
         """
         try:
             
@@ -125,13 +138,27 @@ async def Search_Details_Specific_Hotel(convo_id : str,
                # rooms_options.append({**room, "option": idx + 1, "number_of_selected": 0})
             try:
                 await save_hotelDetails_room_options(convo_id, hotel_details, rooms)
-                state["current_state"] = "\n".join(["Room option of the hotel  already saved",
-                                                    "Focus on booking confirmation, and next steps."])
-                
+                                
             except Exception as e:
                 return "Error saving hotel details and room options"
-            
-            return json.dumps(rooms, indent=2) 
+    
+            context = "\n".join(["Note: Room option of the hotel  already saved",
+                                            "Reminder: Do not forget the list of hotels. The user can still change the list of rooms for other hotels."
+                                            "Focus on the following:",
+                                            "- Choosing an option",
+                                            "- Changing the selected hotel",
+                                            "- Changing the selected room",
+                                            "- Confirming the booking"])
+            return Command(update={
+                    "current_state": context,
+                    # update the message history
+                    "messages": [
+                        ToolMessage(
+                            context+"\n"+json.dumps(rooms, indent=2),
+                            tool_call_id=tool_call_id
+                        )
+                    ]
+                }) 
 
         except Exception:
             return "We’re having trouble fetching room details for this hotel"
@@ -139,16 +166,17 @@ async def Search_Details_Specific_Hotel(convo_id : str,
 
         
 @tool(name_or_callable="Room_Booking_Confirmation")
-async def send_shortlink_request_hotelBooking(accountID:str, conversationID : str, option: int, state: AgentState ) -> str:
+async def send_shortlink_request_hotelBooking(accountID:str, conversationID : str,
+                                               option: int, tool_call_id: Annotated[str, InjectedToolCallId]) -> str:
         """ Generates a short booking link for a selected hotel via the GDS API, triggered when the user confirms their room selection.
         Arguments: 
             accountID (str): Unique identifier of the user account.
             conversationID (str): Unique identifier of the current conversation or session.
             option (int): Index corresponding to the selected hotel option.
-            state(AgentState): Agent State 
-        Returns: A str representing the generated short booking link."""
+            tool_call_id (str): Identifier for this tool call
+        Returns: A Command representing the generated short booking link and updated agent state."""
         gds_checkout_url = "http://localhost:4000/shortLink/"
-        #"http://host.docker.internal:4000/shortLink/" 
+        
 
         payload = {
             "conversationID": str(conversationID),
@@ -176,8 +204,19 @@ async def send_shortlink_request_hotelBooking(accountID:str, conversationID : st
 
                 if not link:
                     return "We’re having trouble creating a booking link."
-                state["current_state"] = "\n".join([f"Room option for the hotel **{option}** has been confirmed.",
+                context= "\n".join([f"Room option for the hotel **{option}** has been confirmed.",
                                             "You may now proceed by asking the user about other needs, such as flight booking."])
-                return link
+                
+                
+                return Command(update={
+                        "current_state": context,
+                        # update the message history
+                        "messages": [
+                            ToolMessage(
+                                context+"\n"+link,
+                                tool_call_id=tool_call_id
+                            )
+                        ]
+                    })
         except httpx.HTTPStatusError:
             return "We’re having trouble creating a booking link."

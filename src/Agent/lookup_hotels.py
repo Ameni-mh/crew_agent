@@ -1,34 +1,28 @@
 from config.config import settings
-import os
-from Tool.redis_tool import change_option_status_hotel_offer, get_all_rooms_from_key, get_hotel_search_options, get_room_search_payload_from_key, get_selected_rooms_from_key,  save_hotel_search_options, save_hotelDetails_room_options, selected_option_from_key
+from Tool.redis_tool import  get_hotel_search_options, get_room_search_payload_from_key
 from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, send_shortlink_request_hotelBooking
-from langchain_community.llms import OpenAI
 from langchain_openai import ChatOpenAI
-from langgraph.prebuilt import create_react_agent
+from langgraph.prebuilt import InjectedState
 from langchain_core.messages import AnyMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.prebuilt.chat_agent_executor import AgentState
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.checkpoint.redis import RedisSaver
-from langmem.short_term import SummarizationNode, RunningSummary
+from typing import Annotated
+from langmem.short_term import SummarizationNode
 from langchain_core.messages.utils import count_tokens_approximately
+from schema.agent_context import AgentContext
 
 
-class State(AgentState):
-    # NOTE: we're adding this key to keep track of previous summary information
-    # to make sure we're not summarizing on every LLM call
-    context: dict[str, RunningSummary]
-    current_state : str ="Focus on hotel search parameters, preferences, and results."
 
 model = ChatOpenAI(model="gpt-4o", temperature=0.0, api_key=settings.openai_api_key)
 
-def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]: 
-
+def prompt(state:AgentState, config: RunnableConfig) -> list[AnyMessage]: 
+    agent_context: Annotated[AgentContext, InjectedState]
     date = config["configurable"].get("date")
     thread_id = config["configurable"].get("thread_id")
     user_id = config["configurable"].get("user_id")
-    context = state.get("current_state")
+    context = ""
+    #agent_context["current_state"]
+
     system_msg = "\n".join([
        "You are an advanced customer support assistant for Vialink, designed to provide comprehensive and accurate assistance to users.",
        "Your role is to help users with their queries related to  bookings, company policies, and other relevant services.",
@@ -62,7 +56,7 @@ def prompt(state: AgentState, config: RunnableConfig) -> list[AnyMessage]:
 
 tools = [Search_Hotels_From_GDS,
         Search_Details_Specific_Hotel,
-        send_shortlink_request_hotelBooking, 
+        send_shortlink_request_hotelBooking,
         ]
 
 
