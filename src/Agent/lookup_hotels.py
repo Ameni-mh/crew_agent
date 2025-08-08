@@ -28,7 +28,7 @@ def prompt(state:AgentState, config: RunnableConfig) -> list[AnyMessage]:
         "- Only finish searching after exhausting all options.",
         "- Response length must be ≤ 500 characters, including spaces.",
         "When GDS returns a list (hotels, rooms, flights, cars):",
-        "- Present results clearly in a numbered list.",
+        "- Present results clearly ",
         "- Ask user to choose one (eg. hotel, fligh, car) or several (eg hotel : room ptions)  for next step (booking, viewing details).",
         "If context is incomplete:",
         "- Use `gds_data_from_memory` to retrieve full GDS or payload data.",
