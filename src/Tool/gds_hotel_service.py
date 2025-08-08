@@ -220,11 +220,12 @@ async def send_shortlink_request_hotelBooking(accountID:str, conversationID : st
                 if not link:
                     return "We’re having trouble creating a booking link."
                 
-                
+                context= "\n".join([f"Room option for the hotel **{option}** has been confirmed.",
+                            "You may now present link and proceed by asking the user about other needs, such as flight booking or re-booking another hotel."])
                 return Command(update={
                         "messages": [
                             ToolMessage(
-                                "\n"+link,
+                                context+"\n"+link,
                                 tool_call_id=tool_call_id
                             )
                         ]
