@@ -55,16 +55,17 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                 )
                 response.raise_for_status()
                 response = response.json()
+
+                offers = []
+                list_hotels = response.get("response")
+                for idx, hotel in enumerate(list_hotels):
+                    offers.append({**hotel, "option": idx + 1, "status": "unselected"})
             
-                await save_hotel_search_options(convo_id, response.get("response"), room_search_payload)
+                await save_hotel_search_options(convo_id, offers, room_search_payload)
                 #TODO: should verife if retrun list or no available
-                #if not response.get("status") == "False":
-                context = "\n".join(["NOTE: Hotel option already saved. Keep just this list in your mind.",
-                                                    "Focus on booking rooms,  and next steps."])
-    
+                #if not response.get("status") == "False":    
                 
                 return Command(update={
-                    "current_state": context,
                     "room_search_payload": room_search_payload,
                     "hotels": response,
                     "messages": [
@@ -165,19 +166,10 @@ async def Search_Details_Specific_Hotel(convo_id : str,
             except Exception as e:
                 return "Error saving hotel details and room options"
     
-            context = "\n".join(["Note: Room option of the hotel  already saved",
-                                            "Reminder: Do not forget the list of hotels. The user can still change the list of rooms for other hotels."
-                                            "Focus on the following:",
-                                            "- Choosing an option",
-                                            "- Changing the selected hotel",
-                                            "- Changing the selected room",
-                                            "- Confirming the booking"])
             return Command(update={
-                    "current_state": context,
-                    # update the message history
                     "messages": [
                         ToolMessage(
-                            context+"\n"+json.dumps(rooms, indent=2),
+                            json.dumps(rooms, indent=2),
                             tool_call_id=tool_call_id
                         )
                     ]
@@ -227,16 +219,12 @@ async def send_shortlink_request_hotelBooking(accountID:str, conversationID : st
 
                 if not link:
                     return "We’re having trouble creating a booking link."
-                context= "\n".join([f"Room option for the hotel **{option}** has been confirmed.",
-                                            "You may now proceed by asking the user about other needs, such as flight booking."])
                 
                 
                 return Command(update={
-                        "current_state": context,
-                        # update the message history
                         "messages": [
                             ToolMessage(
-                                context+"\n"+link,
+                                "\n"+link,
                                 tool_call_id=tool_call_id
                             )
                         ]

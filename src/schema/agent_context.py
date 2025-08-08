@@ -11,7 +11,6 @@ class AgentContext(AgentState):
     context: dict[str, RunningSummary]
     hotels: dict
     room_search_payload: dict
-    current_state : str = "Focus on hotel search parameters, preferences, and results."
 
              
              
