@@ -6,7 +6,11 @@ from langchain.tools.base import tool
 
 redis_url = settings.redis_url
 redis = Redis.from_url(redis_url, decode_responses=True)
-    
+
+DEFAULT_HOTELS_TTL = 86400 
+DEFAULT_ROOMS_TTL = 86400
+DEFAULT_ROOMS_PAYLOAD_TTL = 86400 
+DEFAULT_HOTELS_DETAILS_TTL = 86400   
 
 async def save_hotel_search_options(convo_id:str, offers: list,room_search_payload :dict ) -> str:
     """
@@ -38,6 +42,10 @@ async def save_hotel_search_options(convo_id:str, offers: list,room_search_paylo
 
         await redis.json().set(offers_key, "$", options)
         await redis.json().set(payload_key, "$", room_search_payload)
+        if DEFAULT_HOTELS_TTL:
+            redis.expire(offers_key, DEFAULT_HOTELS_TTL)
+        if DEFAULT_ROOMS_PAYLOAD_TTL:
+            redis.expire(payload_key, DEFAULT_ROOMS_PAYLOAD_TTL)
 
         return "Hotel search options saved successfully."
     except Exception as e:
@@ -62,6 +70,10 @@ async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):
 
         await redis.json().set(rooms_key, "$", roomsOption)
         await redis.json().set(hotelDetails_key, "$", hotelDetails)
+        if DEFAULT_ROOMS_TTL:
+            redis.expire(rooms_key, DEFAULT_ROOMS_TTL)
+        if DEFAULT_HOTELS_DETAILS_TTL:
+            redis.expire(hotelDetails_key, DEFAULT_HOTELS_DETAILS_TTL)
         return "Hotel details and room options saved successfully."
     except Exception as e:
         return "Error saving hotel details and room options."
