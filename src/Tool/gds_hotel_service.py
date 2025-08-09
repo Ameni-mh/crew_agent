@@ -1,26 +1,22 @@
 from urllib.parse import urljoin
 import httpx
-from typing import Optional
 from schema.hotel_search_request_schema import HotelSearchRequest
 import json
 from config.config import settings
 from langchain.tools.base import tool
 from langgraph.prebuilt import InjectedState
-from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolCallId
 from schema.hotel_details_request_schema import HotelDetailsRequest
 from Tool.redis_tool import save_hotel_search_options, save_hotelDetails_room_options
-from Tool.room_tool import save_hotelDetails_roomsOption
 from langgraph.types import Command
 from langchain_core.messages import ToolMessage
 from typing import Annotated
-from langgraph.prebuilt.chat_agent_executor import AgentState
 from schema.agent_context import AgentContext
 
 @tool(name_or_callable="Lookup_hotels")     
 async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                                  tool_call_id: Annotated[str, InjectedToolCallId],
- ) -> str:
+ ) :
         """Look up for available hotels via an external Global Distribution System (GDS).
             Args:
                 conversationID (str): Unique identifier for the current conversation.
@@ -44,7 +40,7 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                     "nationality":request.nationality,
                 }
 
-            # Convert to dict for HTTP request
+            
             params = request.model_dump(by_alias=True, exclude_none=True)
 
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -56,36 +52,44 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                 response.raise_for_status()
                 response = response.json()
 
-                offers = []
-                list_hotels = response.get("response")
-                for idx, hotel in enumerate(list_hotels):
-                    offers.append({**hotel, "option": idx + 1, "status": "unselected"})
-            
-                await save_hotel_search_options(convo_id, offers, room_search_payload)
-                #TODO: should verife if retrun list or no available
-                #if not response.get("status") == "False":    
                 
-                return Command(update={
-                    "room_search_payload": room_search_payload,
-                    "hotels": response,
-                    "messages": [
-                        ToolMessage(
-                            json.dumps(response, indent=2),
-                            tool_call_id=tool_call_id
-                        )
-                    ]
-                })
+                print("status: ", type(response.get("status")), response.get("message"))
+                if  response.get("status") :  
+                    offers = []
+                    list_hotels = response.get("response")
+                    for idx, hotel in enumerate(list_hotels):
+                        offers.append({**hotel, "option": idx + 1, "status": "unselected"})
+                
+                    await save_hotel_search_options(convo_id, offers, room_search_payload)  
+                    
+                    return Command(update={
+                        "room_search_payload": room_search_payload,
+                        "hotels": response,
+                        "messages": [
+                            ToolMessage(
+                                json.dumps(response, indent=2),
+                                tool_call_id=tool_call_id
+                            )
+                        ]
+                    })
+                else: 
+                    return response.get("message")
 
         except httpx.HTTPStatusError:
             return "We ran into an issue finding hotels for you." 
 
 @tool(name_or_callable="gds_data_from_memory")
 async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
-):
+) -> str:
     """
-    Lists information retrieved from the GDS (Global Distribution System), including:
-    - Room search payload used for room queries.
-    - List of available hotels returned from the search.
+    Retrieves previously stored Global Distribution System (GDS) search and payload data from memory.
+
+    This tool is used to access information saved during earlier stages of the booking process,
+    allowing other tools or prompts to reuse these details without re-querying the GDS.
+    Returns:
+        str: Contains:
+            - room_search_payload (dict): The original payload used for the room search if available.
+            - available_hotels (list): A list of hotels returned by the previous search if available.
     """
     
     memory = []
@@ -103,8 +107,7 @@ async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
         
 @tool(name_or_callable="look_up_rooms_for_Hotel_Selected")
 async def Search_Details_Specific_Hotel(convo_id : str, 
-                                        request: HotelDetailsRequest,
-                                        tool_call_id: Annotated[str, InjectedToolCallId]) -> str:
+                                        request: HotelDetailsRequest) -> str:
         """Look up rooms for specific hotel  via an external Global Distribution System (GDS).
             Args:
                 conversationID (str): Unique identifier for the current conversation.
@@ -166,14 +169,7 @@ async def Search_Details_Specific_Hotel(convo_id : str,
             except Exception as e:
                 return "Error saving hotel details and room options"
     
-            return Command(update={
-                    "messages": [
-                        ToolMessage(
-                            json.dumps(rooms, indent=2),
-                            tool_call_id=tool_call_id
-                        )
-                    ]
-                }) 
+            return json.dumps(rooms, indent=2),
 
         except Exception:
             return "We’re having trouble fetching room details for this hotel"

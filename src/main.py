@@ -20,7 +20,7 @@ async def startup_span():
         app.agent =  create_react_agent(
             model=model,
             tools=tools,
-            verbose=True,
+            verbos=False,
             checkpointer=checkpointer,
             store=store,
             pre_model_hook= summarization_node,
