@@ -5,12 +5,13 @@ from langgraph.prebuilt import create_react_agent
 from config.config import settings
 from Agent.lookup_hotels import  model, prompt, tools, summarization_node
 from langgraph.store.redis.aio import AsyncRedisStore
-
+from contextlib import asynccontextmanager
 from schema.agent_context import AgentContext
+import os
 
-app = FastAPI()
-
-async def startup_span():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    os.environ["REDIS_URL"] = settings.redis_url
     async with (
         AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer,
         AsyncRedisStore.from_conn_string(settings.redis_url) as store):
@@ -20,19 +21,16 @@ async def startup_span():
         app.agent =  create_react_agent(
             model=model,
             tools=tools,
-            verbos=False,
+            verbose=False,
             checkpointer=checkpointer,
             store=store,
             pre_model_hook= summarization_node,
             state_schema=AgentContext,
             prompt=prompt,
-            )      
+            )    
+    yield  
 
-async def shutdown_span():
-    pass
+app = FastAPI(lifespan=lifespan)
 
-
-app.on_event("startup")(startup_span)
-app.on_event("shutdown")(shutdown_span)
 
 app.include_router(hotel_router)
