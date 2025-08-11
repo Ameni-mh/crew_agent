@@ -9,3 +9,10 @@ python= 3.11
 ```bash
 $ uvicorn main:app --reload --host 0.0.0.0 --port 5000
 ```
+
+
+## RUN mcp server
+```bash
+$ uv run mcp_server.py
+```
+.venv\Scripts\Activate.ps1

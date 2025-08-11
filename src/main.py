@@ -3,14 +3,28 @@ from routes.hotel_assistant_route import hotel_router
 from langgraph.checkpoint.redis import AsyncRedisSaver
 from langgraph.prebuilt import create_react_agent
 from config.config import settings
-from Agent.lookup_hotels import  model, prompt, tools, summarization_node
+from Agent.lookup_hotels import  model, prompt,  summarization_node
 from langgraph.store.redis.aio import AsyncRedisStore
 from contextlib import asynccontextmanager
 from schema.agent_context import AgentContext
+from langchain_mcp_adapters.client import MultiServerMCPClient
 import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    client = MultiServerMCPClient(
+    {
+        "hotels": {
+            "command": "python",
+            # Replace with absolute path to your math_server.py file
+            "args": ["mcp_server.py"],
+            "transport": "stdio",
+        },
+        
+    }
+)
+    tools_mcp = await client.get_tools()
+
     os.environ["REDIS_URL"] = settings.redis_url
     async with (
         AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer,
@@ -20,7 +34,7 @@ async def lifespan(app: FastAPI):
         app.store = store
         app.agent =  create_react_agent(
             model=model,
-            tools=tools,
+            tools=tools_mcp,
             verbose=False,
             checkpointer=checkpointer,
             store=store,
