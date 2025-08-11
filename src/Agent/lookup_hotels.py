@@ -31,7 +31,7 @@ def prompt(state:AgentState, config: RunnableConfig) -> list[AnyMessage]:
         "- Present results clearly ",
         "- Ask user to choose one (eg. hotel, fligh, car) or several (eg hotel : room ptions)  for next step (booking, viewing details).",
         "If context is incomplete:",
-        "- Use `gds_data_from_memory` to retrieve full GDS or payload data.",
+        "- Retrieve full GDS or payload data from the appropriate memory tool (hotel memory, flight memory, etc.).",
         "If unsure, say you cannot find the information rather than guessing.",
         "IMPORTANT:",
         "- Do not accept past dates.",

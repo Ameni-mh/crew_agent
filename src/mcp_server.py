@@ -76,7 +76,7 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                     
                     return Command(update={
                         "room_search_payload": room_search_payload,
-                        "hotels": response,
+                        "hotels": offers,
                         "messages": [
                             ToolMessage(
                                 json.dumps(response, indent=2),
@@ -90,11 +90,11 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
         except httpx.HTTPStatusError:
             return "We ran into an issue finding hotels for you." 
 
-@mcp.tool(name="gds_data_from_memory")
+@mcp.tool(name="hotel_memory")
 async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
 ) ->str:
     """
-    Retrieves previously stored Global Distribution System (GDS) search and payload data from memory.
+    Retrieves previously stored Global Distribution System (GDS) search and payload data of hotels from memory.
 
     This tool is used to access information saved during earlier stages of the booking process,
     allowing other tools or prompts to reuse these details without re-querying the GDS.
@@ -109,7 +109,7 @@ async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
           memory.append("Room Search Payload : \n"+json.dumps(state["room_search_payload"], indent=2))
 
     if state["hotels"] :
-         memory.append(json.dumps(state["hotels"], indent=2))
+         memory.append("Hotels:\n" + json.dumps(state["hotels"], indent=2))
   
 
     if not state["hotels"] and not state["room_search_payload"]:
