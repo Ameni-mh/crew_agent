@@ -16,7 +16,6 @@ async def lifespan(app: FastAPI):
     {
         "hotels": {
             "command": "python",
-            # Replace with absolute path to your math_server.py file
             "args": ["mcp_server.py"],
             "transport": "stdio",
         },
