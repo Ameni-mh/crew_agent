@@ -76,7 +76,7 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                     
                     return Command(update={
                         "room_search_payload": room_search_payload,
-                        "hotels": offers,
+                        "hotels": response.get("response"),
                         "messages": [
                             ToolMessage(
                                 json.dumps(response, indent=2),
