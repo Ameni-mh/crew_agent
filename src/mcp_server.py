@@ -190,7 +190,7 @@ async def Search_Details_Specific_Hotel(convo_id : str,
         
 @mcp.tool(name="Room_Booking_Confirmation")
 async def send_shortlink_request_hotelBooking(accountID:str, conversationID : str,
-                                               option: int, tool_call_id: Annotated[str, InjectedToolCallId]) -> str:
+                                               option: int, tool_call_id: Annotated[str, InjectedToolCallId]) :
         """ Generates a short booking link for a selected hotel via the GDS API, triggered when the user confirms their room selection.
         Arguments: 
             accountID (str): Unique identifier of the user account.
