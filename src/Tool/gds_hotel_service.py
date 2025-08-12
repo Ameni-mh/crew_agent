@@ -78,7 +78,7 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
         except httpx.HTTPStatusError:
             return "We ran into an issue finding hotels for you." 
 
-@tool(name_or_callable="gds_data_from_memory")
+@tool(name_or_callable="hotel_memory")
 async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
 ) -> str:
     """
@@ -178,7 +178,7 @@ async def Search_Details_Specific_Hotel(convo_id : str,
         
 @tool(name_or_callable="Room_Booking_Confirmation")
 async def send_shortlink_request_hotelBooking(accountID:str, conversationID : str,
-                                               option: int, tool_call_id: Annotated[str, InjectedToolCallId]) -> str:
+                                               option: int, tool_call_id: Annotated[str, InjectedToolCallId]) :
         """ Generates a short booking link for a selected hotel via the GDS API, triggered when the user confirms their room selection.
         Arguments: 
             accountID (str): Unique identifier of the user account.
