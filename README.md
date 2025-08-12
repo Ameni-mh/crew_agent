@@ -16,3 +16,8 @@ $ uvicorn main:app --reload --host 0.0.0.0 --port 5000
 $ uv run mcp_server.py
 ```
 .venv\Scripts\Activate.ps1
+
+ sudo docker compose up -d
+
+
+postgresql://postgres:ameni123@localhost:5432/travel

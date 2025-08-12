@@ -2,7 +2,9 @@ fastapi
 uvicorn[standard]
 pydantic-settings
 langgraph
+langgraph-checkpoint-postgres
 langdetect
+psycopg[binary,pool]
 chromadb
 redis
 langgraph-checkpoint-redis
