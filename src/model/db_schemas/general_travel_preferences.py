@@ -1,5 +1,5 @@
 
-from src.model.db_schemas.travel_base import SQLAlchemyBase
+from model.db_schemas.travel_base import SQLAlchemyBase
 from sqlalchemy import Column, Integer, DateTime, func, String, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -24,5 +24,5 @@ class GeneralPreferences(SQLAlchemyBase):
     user = relationship("User", back_populates="general_preferences")
 
     __table_args__ = (
-        Index('ix_hotelPreferences_user_id', general_user_id)
+        Index('ix_hotelPreferences_user_id', general_user_id),
     )

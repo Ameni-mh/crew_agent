@@ -24,5 +24,5 @@ class User(SQLAlchemyBase):
 
     __table_args__ = (
         Index('ix_hotelPreferences_user_id', hotel_user_id),
-        Index('ix_generalPreferences_user_id', general_user_id)
+        Index('ix_generalPreferences_user_id', general_user_id),
     )

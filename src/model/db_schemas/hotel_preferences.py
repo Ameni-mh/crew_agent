@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 import uuid
 
-class Hotel_preferences(SQLAlchemyBase):
+class HotelPreferences(SQLAlchemyBase):
     __tablename__ = "hotel_preferences"
 
     hotel_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -22,8 +22,8 @@ class Hotel_preferences(SQLAlchemyBase):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
-    user = relationship("User", back_populates="hotel_preferences")
+    user = relationship("User", back_populates="hotelPreferences")
 
     __table_args__ = (
-        Index('ix_hotelPreferences_user_id', hotel_user_id)
+        Index('ix_hotelPreferences_user_id', hotel_user_id),
     )
