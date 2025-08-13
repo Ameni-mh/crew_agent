@@ -12,8 +12,8 @@ from langgraph.types import Command
 from langchain_core.messages import ToolMessage
 from typing import Annotated
 from schema.agent_context import AgentContext
-from schema.hotel_tool_output import HotelRequestOutput
 from schema.hotel_details_request_output import HotelDetailsRequestOutput
+from src.schema.hotel_search_request_output import HotelRequestOutput
 
 @tool(name_or_callable="Lookup_hotels")     
 async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
