@@ -12,6 +12,7 @@ from langgraph.types import Command
 from langchain_core.messages import ToolMessage
 from typing import Annotated
 from schema.agent_context import AgentContext
+from schema.hotel_tool_output import HotelRequestOutput
 
 @tool(name_or_callable="Lookup_hotels")     
 async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
@@ -52,22 +53,31 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                 response.raise_for_status()
                 response = response.json()
 
-                
-                print("status: ", type(response.get("status")), response.get("message"))
+            
                 if  response.get("status") :  
                     offers = []
                     list_hotels = response.get("response")
+
                     for idx, hotel in enumerate(list_hotels):
                         offers.append({**hotel, "option": idx + 1, "status": "unselected"})
                 
-                    await save_hotel_search_options(convo_id, offers, room_search_payload)  
+                    await save_hotel_search_options(convo_id, offers, room_search_payload)
+
+    
+                    hotel_list_str = "\n".join(
+                    f"Hotel id : {hotel['hotel_id']} - name : {hotel['name']} - Starts :  {hotel['stars']}⭐ - actual_price_per_night : {hotel['actual_price_per_night']} - address:{hotel['address']}"
+                    for idx, hotel in enumerate(list_hotels)
+                    )
+                    
+
+                    note = "Note: just present 5 hotels au Maximum and Doestn't forget to present price and starts to the user"
                     
                     return Command(update={
                         "room_search_payload": room_search_payload,
                         "hotels": response,
                         "messages": [
                             ToolMessage(
-                                json.dumps(response, indent=2),
+                                hotel_list_str+"\n"+note,
                                 tool_call_id=tool_call_id
                             )
                         ]
@@ -97,7 +107,7 @@ async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
           memory.append("Room Search Payload : \n"+json.dumps(state["room_search_payload"], indent=2))
 
     if state["hotels"] :
-         memory.append(json.dumps(state["hotels"], indent=2))
+         memory.append("\n".join(state["hotels"]))
   
 
     if not state["hotels"] and not state["room_search_payload"]:
@@ -168,8 +178,10 @@ async def Search_Details_Specific_Hotel(convo_id : str,
                                 
             except Exception as e:
                 return "Error saving hotel details and room options"
+            
+            note = "NOTE: The following rooms are available, doestn't forget to present price and amenties to the user"
     
-            return json.dumps(rooms, indent=2),
+            return json.dumps(rooms, indent=2)+"\n"+note,
 
         except Exception:
             return "We’re having trouble fetching room details for this hotel"
