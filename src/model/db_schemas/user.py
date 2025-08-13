@@ -1,7 +1,9 @@
 
-from sqlalchemy import Column, Integer, DateTime, func, String
+from sqlalchemy import Column, Integer, DateTime, func, String, ForeignKey
 from model.db_schemas.travel_base import SQLAlchemyBase
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+from sqlalchemy import Index
 import uuid
 
 class User(SQLAlchemyBase):
@@ -11,5 +13,16 @@ class User(SQLAlchemyBase):
     user_uuid = Column(UUID(as_uuid=True), nullable=False, unique=True, default=uuid.uuid4)
     username = Column(String, nullable=False, unique=True)
 
+    general_user_id = Column(Integer, ForeignKey("GeneralPreferences.general_id"), nullable=False)
+    hotel_user_id = Column(Integer, ForeignKey("Hotel_preferences.hotel_id"), nullable=False)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+
+    general_preferences = relationship("GeneralPreferences", back_populates="user")
+    hotel_preferences = relationship("Hotel_preferences", back_populates="user")
+
+    __table_args__ = (
+        Index('ix_hotelPreferences_user_id', hotel_user_id),
+        Index('ix_generalPreferences_user_id', general_user_id)
+    )

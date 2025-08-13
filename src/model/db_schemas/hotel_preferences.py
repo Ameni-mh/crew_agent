@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Index
 import uuid
 
-class hotel_preferences(SQLAlchemyBase):
+class Hotel_preferences(SQLAlchemyBase):
     __tablename__ = "hotel_preferences"
 
     hotel_id = Column(Integer, primary_key=True, autoincrement=True)
