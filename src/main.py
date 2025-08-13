@@ -5,8 +5,10 @@ from langgraph.prebuilt import create_react_agent
 from config.config import settings
 from Agent.lookup_hotels import  model, prompt,  summarization_node
 from langgraph.store.redis.aio import AsyncRedisStore
-from langgraph.store.postgres.aio import AsyncPostgresStore
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 from contextlib import asynccontextmanager
+from config.config import settings
 from schema.agent_context import AgentContext
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
@@ -15,6 +17,13 @@ from Agent.lookup_hotels import tools
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+    postgres_conn = f"postgresql+asyncpg://{settings.postgres_username}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_main_database}"
+    app.db_engine = create_async_engine(postgres_conn)
+    app.db_client = sessionmaker(
+        app.db_engine, class_=AsyncSession, expire_on_commit=False
+    )
+
     client = MultiServerMCPClient(
     {
         "hotels": {
