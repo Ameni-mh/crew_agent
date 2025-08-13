@@ -11,18 +11,24 @@ from contextlib import asynccontextmanager
 from config.config import settings
 from schema.agent_context import AgentContext
 from langchain_mcp_adapters.client import MultiServerMCPClient
-
+from routes.data import data_router
 import os
 from Agent.lookup_hotels import tools
+from model.db_schemas.travel_base import SQLAlchemyBase
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
     postgres_conn = f"postgresql+asyncpg://{settings.postgres_username}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_main_database}"
-    app.db_engine = create_async_engine(postgres_conn)
+    app.db_engine = create_async_engine(postgres_conn, echo=True)
     app.db_client = sessionmaker(
         app.db_engine, class_=AsyncSession, expire_on_commit=False
     )
+
+    async with app.db_engine.begin() as conn:
+        print("Creating database tables...")
+        await conn.run_sync(SQLAlchemyBase.metadata.create_all)
+        print("✅ Database tables created successfully!")
 
     client = MultiServerMCPClient(
     {
@@ -53,9 +59,11 @@ async def lifespan(app: FastAPI):
             state_schema=AgentContext,
             prompt=prompt,
             )    
-    yield  
+    yield 
+    app.db_engine.dispose() 
 
 app = FastAPI(lifespan=lifespan)
 
 
 app.include_router(hotel_router)
+app.include_router(data_router)

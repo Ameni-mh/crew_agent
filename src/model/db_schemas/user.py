@@ -11,18 +11,10 @@ class User(SQLAlchemyBase):
 
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     user_uuid = Column(UUID(as_uuid=True), nullable=False, unique=True, default=uuid.uuid4)
-    username = Column(String, nullable=False, unique=True)
-
-    general_user_id = Column(Integer, ForeignKey("GeneralPreferences.general_id"), nullable=False)
-    hotel_user_id = Column(Integer, ForeignKey("Hotel_preferences.hotel_id"), nullable=False)
+    username = Column(String, nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
     general_preferences = relationship("GeneralPreferences", back_populates="user")
-    hotel_preferences = relationship("Hotel_preferences", back_populates="user")
-
-    __table_args__ = (
-        Index('ix_hotelPreferences_user_id', hotel_user_id),
-        Index('ix_generalPreferences_user_id', general_user_id),
-    )
+    hotel_preferences = relationship("HotelPreferences", back_populates="user")  

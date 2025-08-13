@@ -17,12 +17,12 @@ class HotelPreferences(SQLAlchemyBase):
     pet_friendly = Column(Boolean, nullable=True)
     view_preference = Column(String, nullable=True)
 
-    hotel_user_id = Column(String, ForeignKey("user.user_id"), nullable=False)
+    hotel_user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
-    user = relationship("User", back_populates="hotelPreferences")
+    user = relationship("User", back_populates="hotel_preferences")
 
     __table_args__ = (
         Index('ix_hotelPreferences_user_id', hotel_user_id),

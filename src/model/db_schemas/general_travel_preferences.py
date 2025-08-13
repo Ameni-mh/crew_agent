@@ -15,7 +15,7 @@ class GeneralPreferences(SQLAlchemyBase):
     currencies = Column(String, nullable=True)
     budget = Column(Integer, nullable=True)
 
-    general_user_id = Column(Integer, ForeignKey("user.user_id"), nullable=False)
+    general_user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
     
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -24,5 +24,5 @@ class GeneralPreferences(SQLAlchemyBase):
     user = relationship("User", back_populates="general_preferences")
 
     __table_args__ = (
-        Index('ix_hotelPreferences_user_id', general_user_id),
+        Index('ix_gneralPreferences_user_id', general_user_id),
     )
