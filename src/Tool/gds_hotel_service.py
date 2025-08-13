@@ -13,6 +13,7 @@ from langchain_core.messages import ToolMessage
 from typing import Annotated
 from schema.agent_context import AgentContext
 from schema.hotel_tool_output import HotelRequestOutput
+from schema.hotel_details_request_output import HotelDetailsRequestOutput
 
 @tool(name_or_callable="Lookup_hotels")     
 async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
@@ -151,33 +152,33 @@ async def Search_Details_Specific_Hotel(convo_id : str,
             response.raise_for_status()
             response = response.json()
 
+            response_pydantic = HotelDetailsRequestOutput(**response)
+
             hotel_details = { 
-            "id": response.get("id"),
-            "name": response.get("name"),
-            "city": response.get("city"),
-            "country": response.get("country"),
-            "address": response.get("address"),
-            "stars": response.get("stars"),
-            "ratings": response.get("ratings"),
-            "longitude": response.get("longitude"),
-            "latitude": response.get("latitude"),
-            "desc": response.get("desc"),
-            "img": response.get("img"),
-            "amenities": response.get("amenities"),
-            "supplier_name": response.get("supplier_name"),
-            "supplier_id": response.get("supplier_id"),
-            "checkin": response.get("checkin"),
-            "checkout": response.get("checkout"),
-            "policy": response.get("policy"),
-            "booking_age_requirement": response.get(
-                "booking_age_requirement"
-            ),
-            "cancellation": response.get("cancellation"),
-            "tax_percentage": response.get("tax_percentage"),
-            "hotel_phone": response.get("hotel_phone"),
-            "hotel_email": response.get("hotel_email"),
-            "hotel_website": response.get("hotel_website"),
-            "discount": response.get("discount"),
+            "id": response_pydantic.id,
+            "name": response_pydantic.name,
+            "city": response_pydantic.city,
+            "country": response_pydantic.country,
+            "address": response_pydantic.address,
+            "stars": response_pydantic.stars,
+            "ratings": response_pydantic.ratings,
+            "longitude": response_pydantic.longitude,
+            "latitude": response_pydantic.latitude,
+            "desc": response_pydantic.desc,
+            "img": response_pydantic.img,
+            "amenities": response_pydantic.amenities,
+            "supplier_name": response_pydantic.supplier_name,
+            "supplier_id": response_pydantic.supplier_id,
+            "checkin": response_pydantic.checkin,
+            "checkout": response_pydantic.checkout,
+            "policy": response_pydantic.policy,
+            "booking_age_requirement": response_pydantic.booking_age_requirement,
+            "cancellation": response_pydantic.cancellation,
+            "tax_percentage": response_pydantic.tax_percentage,
+            "hotel_phone": response_pydantic.hotel_phone,
+            "hotel_email": response_pydantic.hotel_email,
+            "hotel_website": response_pydantic.hotel_website,
+            "discount": response_pydantic.discount,
         }
 
             #rooms_options = []
