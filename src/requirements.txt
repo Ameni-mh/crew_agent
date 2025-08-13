@@ -13,3 +13,4 @@ langchain-mcp-adapters
 mcp[cli]==1.10.1
 SQLAlchemy
 alembic
+psycopg2
