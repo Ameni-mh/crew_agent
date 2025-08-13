@@ -1,5 +1,5 @@
 
-from src.model.db_schemas.travel_base import SQLAlchemyBase
+from model.db_schemas.travel_base import SQLAlchemyBase
 from sqlalchemy import Column, Integer, DateTime, func, String, Boolean, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -17,7 +17,7 @@ class HotelPreferences(SQLAlchemyBase):
     pet_friendly = Column(Boolean, nullable=True)
     view_preference = Column(String, nullable=True)
 
-    hotel_user_id = Column(Integer, ForeignKey("user.user_id"), nullable=False)
+    hotel_user_id = Column(String, ForeignKey("user.user_id"), nullable=False)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)

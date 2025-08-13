@@ -3,7 +3,7 @@
 from browserbase import BaseModel
 from sqlalchemy.future import select
 
-from src.model.db_schemas.hotel_preferences import HotelPreferences
+from model.db_schemas.hotel_preferences import HotelPreferences
 
 
 
@@ -26,11 +26,10 @@ class HotelPreferencesModel(BaseModel):
             await session.refresh(hotel_preferences)
         return hotel_preferences
     
-    async def get_hotelPreferences_perUser(self, hotel_user_id: int, hotel_id: str):
+    async def get_hotelPreferences_perUser(self, hotel_user_id: int):
 
         async with self.db_client() as session:
             stmt = select(HotelPreferences).where(
-                HotelPreferences.hotel_id == hotel_id,
                 HotelPreferences.hotel_user_id == hotel_user_id
             )
             result = await session.execute(stmt)

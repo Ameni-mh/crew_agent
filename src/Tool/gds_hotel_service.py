@@ -1,4 +1,5 @@
 from urllib.parse import urljoin
+from fastapi import Request
 import httpx
 from schema.hotel_search_request_schema import HotelSearchRequest
 import json
@@ -14,6 +15,8 @@ from typing import Annotated
 from schema.agent_context import AgentContext
 from schema.hotel_details_request_output import HotelDetailsRequestOutput
 from schema.hotel_search_request_output import HotelRequestOutput
+from model.generalModel import GeneralPreferencesModel
+from model.hotelPreferencesModel import HotelPreferencesModel
 
 @tool(name_or_callable="Lookup_hotels")     
 async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
@@ -252,3 +255,24 @@ async def send_shortlink_request_hotelBooking(accountID:str, conversationID : st
                     })
         except httpx.HTTPStatusError:
             return "We’re having trouble creating a booking link."
+        
+@tool(name_or_callable="get_hotel_preferences")
+async def get_hotel_preferences(user_id: str):
+    """Fetches hotel and general preferences from the database.
+    Args:
+        user_id (str): Unique identifier for the user."""
+    general_pref_model = await GeneralPreferencesModel.create_instance(db_client=Request.app.db_client)
+    general_preferences = await general_pref_model.get_generalPreferences_perUser(
+        general_user_id= user_id 
+    )
+
+    hotel_pref_model = await HotelPreferencesModel.create_instance(db_client=Request.app.db_client)
+    hotel_preferences = await hotel_pref_model.get_hotelPreferences_perUser(hotel_user_id=user_id)
+
+    if not hotel_preferences and not general_preferences:
+        return "No hotel or general preferences found for this user."
+    
+    hotel = hotel_preferences.model_dump(by_alias=True, exclude_none=True) if hotel_preferences else "No hotel preferences found for this user."
+    general = general_preferences.model_dump(by_alias=True, exclude_none=True) if general_preferences else "No general preferences found for this user."
+    return f"hotel_preferences: {hotel} \n general_preferences: {general}"
+    

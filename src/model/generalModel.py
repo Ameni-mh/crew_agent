@@ -22,12 +22,11 @@ class GeneralPreferencesModel(BaseModel):
             await session.refresh(general_preferences)
         return general_preferences
     
-    async def get_generalPreferences_perUser(self, general_user_id: str, general_id: str):
+    async def get_generalPreferences_perUser(self, general_user_id: str):
 
         async with self.db_client() as session:
             stmt = select(GeneralPreferences).where(
-                GeneralPreferences.general_user_id == general_user_id,
-                GeneralPreferences.general_id == general_id
+                GeneralPreferences.general_user_id == general_user_id
             )
             result = await session.execute(stmt)
             record = result.scalar_one_or_none()
