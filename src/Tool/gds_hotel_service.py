@@ -58,12 +58,23 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                     offers = []
                     list_hotels = response.get("response")
 
+                    pydanctic_hotels = [HotelRequestOutput(**hotel) for hotel in list_hotels]
+
                     for idx, hotel in enumerate(list_hotels):
                         offers.append({**hotel, "option": idx + 1, "status": "unselected"})
                 
                     await save_hotel_search_options(convo_id, offers, room_search_payload)
 
-    
+                    full_hotel_search = "\n".join(
+                    "\n".join([
+                        f"Hotel id : {hotel.hotel_id} - name : {hotel.name} - Starts :  {hotel.stars} - actual_price_per_night : {hotel.actual_price_per_night} - address:{hotel.address}",
+                        f"image : {hotel.img}  - rating : {hotel.rating} - location : {hotel.location} - latitude : {hotel.latitude} - longitude : {hotel.longitude}",
+                        f"currency : {hotel.currency} - booking_currency : {hotel.booking_currency} - service_fee : {hotel.service_fee} - supplier_name : {hotel.supplier_name} - supplier_id : {hotel.supplier_id} - redirect : {hotel.redirect}",
+                        f"booking_data : {json.dumps(hotel.booking_data, indent=2)} - color : {hotel.color}"]
+                         )
+                    for idx, hotel in enumerate(pydanctic_hotels)
+                    )
+
                     hotel_list_str = "\n".join(
                     f"Hotel id : {hotel['hotel_id']} - name : {hotel['name']} - Starts :  {hotel['stars']}⭐ - actual_price_per_night : {hotel['actual_price_per_night']} - address:{hotel['address']}"
                     for idx, hotel in enumerate(list_hotels)
@@ -74,7 +85,7 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                     
                     return Command(update={
                         "room_search_payload": room_search_payload,
-                        "hotels": response,
+                        "hotels": full_hotel_search ,
                         "messages": [
                             ToolMessage(
                                 hotel_list_str+"\n"+note,
@@ -107,7 +118,7 @@ async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
           memory.append("Room Search Payload : \n"+json.dumps(state["room_search_payload"], indent=2))
 
     if state["hotels"] :
-         memory.append("\n".join(state["hotels"]))
+         memory.append(f" Available hotels : \n {state['hotels']}")
   
 
     if not state["hotels"] and not state["room_search_payload"]:

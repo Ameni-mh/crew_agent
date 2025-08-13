@@ -5,10 +5,13 @@ from langgraph.prebuilt import create_react_agent
 from config.config import settings
 from Agent.lookup_hotels import  model, prompt,  summarization_node
 from langgraph.store.redis.aio import AsyncRedisStore
+from langgraph.store.postgres.aio import AsyncPostgresStore
 from contextlib import asynccontextmanager
 from schema.agent_context import AgentContext
 from langchain_mcp_adapters.client import MultiServerMCPClient
+
 import os
+from Agent.lookup_hotels import tools
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,7 +36,7 @@ async def lifespan(app: FastAPI):
         app.store = store
         app.agent =  create_react_agent(
             model=model,
-            tools=tools_mcp,
+            tools=tools,
             verbose=False,
             checkpointer=checkpointer,
             store=store,

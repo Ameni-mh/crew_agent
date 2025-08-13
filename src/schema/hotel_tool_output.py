@@ -24,5 +24,4 @@ class HotelRequestOutput(BaseModel):
     redirect: str
     booking_data: Dict
     color: str
-    option: int
-    status: str# List of offers available for the hotel
+    

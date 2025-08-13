@@ -9,7 +9,7 @@ class AgentContext(AgentState):
     # NOTE: we're adding this key to keep track of previous summary information
     # to make sure we're not summarizing on every LLM call
     context: dict[str, RunningSummary]
-    hotels: dict
+    hotels: str
     room_search_payload: dict
 
              
