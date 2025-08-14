@@ -11,7 +11,7 @@ class GeneralPreferences(SQLAlchemyBase):
 
     general_id = Column(Integer, primary_key=True, autoincrement=True)
     general_uuid = Column(UUID(as_uuid=True), nullable=False, unique=True, default=uuid.uuid4)
-    hotel_name = Column(String, nullable=False)
+    hotel_name = Column(String, nullable=True)
     currencies = Column(String, nullable=True)
     budget = Column(Integer, nullable=True)
 

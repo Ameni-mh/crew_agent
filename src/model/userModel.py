@@ -22,19 +22,7 @@ class UserModel(BaseDataModel):
         
         return user
     
-    async def get_user_or_create_one(self,  user: User):
-        async with self.db_client() as session:
-            async with session.begin():
-                query = select(User).where(User.user_id == user.user_id)
-                result = await session.execute(query)
-                user = result.scalar_one_or_none()
-                if user is None:
-                    user_rec = user
-
-                    user = await self.create_project(user=user_rec)
-                    return user
-                else:
-                    return user
+    
                 
     async def get_all_projects(self):
 
