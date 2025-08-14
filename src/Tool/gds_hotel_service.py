@@ -1,3 +1,4 @@
+from datetime import datetime
 from urllib.parse import urljoin
 from fastapi import Request
 import httpx
@@ -257,6 +258,11 @@ async def send_shortlink_request_hotelBooking(config: RunnableConfig,
                     })
         except httpx.HTTPStatusError:
             return "We’re having trouble creating a booking link."
+        
+@tool(name_or_callable="get_current_date")        
+def get_current_date():
+    """Returns the current date in 'DD-MM-YYYY' format."""
+    return datetime.now().strftime("%d-%m-%Y")
         
 @tool(name_or_callable="get_hotel_preferences")
 async def get_hotel_preferences(user_id: str):
