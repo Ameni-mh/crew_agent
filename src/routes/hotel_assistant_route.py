@@ -14,23 +14,22 @@ hotel_router = APIRouter(
 
 
 @hotel_router.post("/hotels")
-async def hotel_assistant(request:Request ,query: str, user_id:str, con_id: str):
-    store: BaseStore = request.app.store
-    config = {"configurable": {"thread_id":con_id, 
-                               "date": datetime.now().strftime("%d-%m-%Y"),
-                               "user_id": user_id}}
+async def hotel_assistant(request:Request ,query: str, accound_id:str, con_id: str):
     
-    namespace = ("memories", user_id)
-    #await store.aput(namespace, str(uuid.uuid4()), {"data":query})
+    config = {"configurable": {"thread_id":con_id, 
+                               "date": datetime.now().strftime("%d-%m-%Y")}}
+    
+    
 
     input={
         "role" : "user",
         "content" : query,
     }
     
-    result = await  request.app.agent.ainvoke({"messages":[input]},config=config)
-    #await store.aput(namespace, str(uuid.uuid4()), {"data":result["messages"][-1].content})
-    #print( "agent state :",agent_context["current_state"])
+    result = await  request.app.agent.ainvoke({"messages":[input],"account_id": accound_id,
+                                               "conversation_id": con_id},
+                                               config=config)
+    
 
     responce =  result["messages"][-1].content
     

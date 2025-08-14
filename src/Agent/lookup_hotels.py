@@ -16,9 +16,7 @@ from schema.agent_context import AgentContext
 model = ChatOpenAI(model="gpt-4o", temperature=0.0, api_key=settings.openai_api_key)
 
 def prompt(state:AgentState, config: RunnableConfig) -> list[AnyMessage]: 
-    date = config["configurable"].get("date")
-    thread_id = config["configurable"].get("thread_id")
-    user_id = config["configurable"].get("user_id")
+    date = config["configurable"].get("date")  
 
     system_msg = "\n".join([
         "You are Vialink’s advanced customer support assistant. Provide accurate, concise help on bookings, company policies, and related services.",
@@ -36,7 +34,6 @@ def prompt(state:AgentState, config: RunnableConfig) -> list[AnyMessage]:
         "IMPORTANT:",
         "- Do not accept past dates.",
         f"- Current date: {date}",
-        f"- Some tools require conversation ID: {thread_id} and user ID: {user_id}",
         "Your Response:"
 ])
     print("=========================")

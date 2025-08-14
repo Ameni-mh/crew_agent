@@ -19,12 +19,13 @@ from model.generalModel import GeneralPreferencesModel
 from model.hotelPreferencesModel import HotelPreferencesModel
 
 @tool(name_or_callable="Lookup_hotels")     
-async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
+async def Search_Hotels_From_GDS(state: Annotated[AgentContext, InjectedState],
+                                 request : HotelSearchRequest,
                                  tool_call_id: Annotated[str, InjectedToolCallId],
  ) :
         """Look up for available hotels via an external Global Distribution System (GDS).
             Args:
-                conversationID (str): Unique identifier for the current conversation.
+                state (AgentContext): Current state of the agent, injected by the framework.
                 request (HotelSearchRequest): Structured request containing hotel search parameters.
                 tool_call_id (str): Identifier for this tool call
             Returns:
@@ -67,7 +68,7 @@ async def Search_Hotels_From_GDS(convo_id:str, request : HotelSearchRequest,
                     for idx, hotel in enumerate(list_hotels):
                         offers.append({**hotel, "option": idx + 1, "status": "unselected"})
                 
-                    await save_hotel_search_options(convo_id, offers, room_search_payload)
+                    await save_hotel_search_options(state["conversation_id"], offers, room_search_payload)
 
                     full_hotel_search = "\n".join(
                     "\n".join([
@@ -131,11 +132,11 @@ async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
     return "\n".join(memory)
         
 @tool(name_or_callable="look_up_rooms_for_Hotel_Selected")
-async def Search_Details_Specific_Hotel(convo_id : str, 
+async def Search_Details_Specific_Hotel(state: Annotated[AgentContext, InjectedState], 
                                         request: HotelDetailsRequest) -> str:
         """Look up rooms for specific hotel  via an external Global Distribution System (GDS).
             Args:
-                conversationID (str): Unique identifier for the current conversation.
+                state (AgentContext): Current state of the agent, injected by the framework.
                 request (HotelDetailsRequest): Structured request containing lookup rooms parameters.
                 tool_call_id (str): Identifier for this tool call
             Returns:
@@ -189,7 +190,7 @@ async def Search_Details_Specific_Hotel(convo_id : str,
             #for idx, room in enumerate(rooms):
                # rooms_options.append({**room, "option": idx + 1, "number_of_selected": 0})
             try:
-                await save_hotelDetails_room_options(convo_id, hotel_details, rooms)
+                await save_hotelDetails_room_options(state["conversation_id"], hotel_details, rooms)
                                 
             except Exception as e:
                 return "Error saving hotel details and room options"
@@ -198,18 +199,18 @@ async def Search_Details_Specific_Hotel(convo_id : str,
     
             return json.dumps(rooms, indent=2)+"\n"+note,
 
-        except Exception:
+        except Exception as e:
+            print("Error during hotel room search:", str(e))
             return "We’re having trouble fetching room details for this hotel"
             
 
         
 @tool(name_or_callable="Room_Booking_Confirmation")
-async def send_shortlink_request_hotelBooking(accountID:str, conversationID : str,
-                                               option: int, tool_call_id: Annotated[str, InjectedToolCallId]) :
+async def send_shortlink_request_hotelBooking(state: Annotated[AgentContext, InjectedState],
+                                              option: int, tool_call_id: Annotated[str, InjectedToolCallId]) :
         """ Generates a short booking link for a selected hotel via the GDS API, triggered when the user confirms their room selection.
         Arguments: 
-            accountID (str): Unique identifier of the user account.
-            conversationID (str): Unique identifier of the current conversation or session.
+            state (AgentContext): Current state of the agent, injected by the framework.
             option (int): Index corresponding to the selected hotel option.
             tool_call_id (str): Identifier for this tool call
         Returns: A Command representing the generated short booking link and updated agent state."""
@@ -217,8 +218,8 @@ async def send_shortlink_request_hotelBooking(accountID:str, conversationID : st
         
 
         payload = {
-            "conversationID": str(conversationID),
-            "accountID": str(accountID),
+            "conversationID": state["conversation_id"],
+            "accountID": state["account_id"],
             "option": int(option),
             "type": "hotel_booking",
         }

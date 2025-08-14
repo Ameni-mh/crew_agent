@@ -43,18 +43,15 @@ async def lifespan(app: FastAPI):
     tools_mcp = await client.get_tools()
 
     os.environ["REDIS_URL"] = settings.redis_url
-    async with (
-        AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer,
-        AsyncRedisStore.from_conn_string(settings.redis_url) as store):
-        await checkpointer.asetup()
-        await store.setup()
-        app.store = store
+    async with  AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer:
+        
+        #await checkpointer.asetup()
+        
         app.agent =  create_react_agent(
             model=model,
             tools=tools,
             verbose=False,
             checkpointer=checkpointer,
-            store=store,
             pre_model_hook= summarization_node,
             state_schema=AgentContext,
             prompt=prompt,
