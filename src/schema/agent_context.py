@@ -8,8 +8,6 @@ from langgraph.prebuilt import InjectedState
 class AgentContext(AgentState):
     # NOTE: we're adding this key to keep track of previous summary information
     # to make sure we're not summarizing on every LLM call
-    account_id:str
-    conversation_id:str
     context: Optional[dict[str, RunningSummary]]
     hotels: Optional[str] 
     room_search_payload: Optional[dict] 
