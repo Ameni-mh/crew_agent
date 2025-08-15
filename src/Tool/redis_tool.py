@@ -1,11 +1,15 @@
 import json
 from typing import Optional
 from redis.asyncio import Redis
+import uvicorn
 from config.config import settings
 from langchain.tools.base import tool
 
 redis_url = settings.redis_url
 redis = Redis.from_url(redis_url, decode_responses=True)
+import logging
+
+logger = logging.getLogger(uvicorn.__name__)
 
 DEFAULT_HOTELS_TTL = 86400 
 DEFAULT_ROOMS_TTL = 86400
@@ -49,7 +53,7 @@ async def save_hotel_search_options(convo_id:str, offers: list,room_search_paylo
 
         return "Hotel search options saved successfully."
     except Exception as e:
-        return f"Error saving hotel search options: {str(e)}"
+        return "We couldn’t save your hotel preferences at the moment."
 
 
 async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):
@@ -76,7 +80,7 @@ async def save_hotelDetails_room_options(convo_id, hotelDetails, roomsOption):
             redis.expire(hotelDetails_key, DEFAULT_HOTELS_DETAILS_TTL)
         return "Hotel details and room options saved successfully."
     except Exception as e:
-        return "Error saving hotel details and room options."
+        logger.error("Error saving hotel details and room options.")
 
 @tool(name_or_callable="hotel_option_from_redis")
 async def get_hotel_search_options(convo_id: str) -> list:
@@ -94,6 +98,23 @@ async def get_hotel_search_options(convo_id: str) -> list:
         return "No offers found for this conversation."
     
     return "/n".join(offers)
+
+async def get_policy_cancellation_rules(convo_id: str) -> str:
+    """
+    Retrieve cancellation and policy rules for a specific hotel.
+    """
+    hotelDetails_key = f"hotel_booking:hotelDetails:{convo_id}"
+    hotelDetails = await redis.json().get(hotelDetails_key, "$")
+
+    if not hotelDetails or not isinstance(hotelDetails, dict):
+        return "No hotel details found for this conversation."
+    
+    policy_cancellation = {
+        "cancellation_rules": hotelDetails.get("cancellation", "No  policy rules  available."),
+        "policy_rules": hotelDetails.get("cpolicy", "No cancellation rules available."),
+    }
+
+    return json.dumps(policy_cancellation, indent=2)
 
 
 async def change_option_status_hotel_offer(

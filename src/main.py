@@ -27,19 +27,7 @@ async def lifespan(app: FastAPI):
     async with app.db_engine.begin() as conn:
         print("Creating database tables...")
         await conn.run_sync(SQLAlchemyBase.metadata.create_all)
-        print("✅ Database tables created successfully!")
-
-    client = MultiServerMCPClient(
-    {
-        "hotels": {
-            "command": "python",
-            "args": ["mcp_server.py"],
-            "transport": "stdio",
-        },
-        
-    }
-)
-    tools_mcp = await client.get_tools()
+        print("✅ Database tables created successfully!")    
 
     os.environ["REDIS_URL"] = settings.redis_url
     async with  AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer:

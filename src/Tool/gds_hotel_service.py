@@ -2,6 +2,7 @@ from datetime import datetime
 from urllib.parse import urljoin
 from fastapi import Request
 import httpx
+import uvicorn
 from schema.hotel_search_request_schema import HotelSearchRequest
 import json
 from config.config import settings
@@ -9,7 +10,7 @@ from langchain.tools.base import tool
 from langgraph.prebuilt import InjectedState
 from langchain_core.tools import InjectedToolCallId
 from schema.hotel_details_request_schema import HotelDetailsRequest
-from Tool.redis_tool import save_hotel_search_options, save_hotelDetails_room_options
+from Tool.redis_tool import get_policy_cancellation_rules, save_hotel_search_options, save_hotelDetails_room_options
 from langgraph.types import Command
 from langchain_core.messages import ToolMessage
 from typing import Annotated
@@ -19,6 +20,9 @@ from schema.hotel_search_request_output import HotelRequestOutput
 from model.generalModel import GeneralPreferencesModel
 from model.hotelPreferencesModel import HotelPreferencesModel
 from langchain_core.runnables import RunnableConfig
+import logging
+
+logger = logging.getLogger(uvicorn.__name__)
 
 @tool(name_or_callable="Lookup_hotels")     
 async def Search_Hotels_From_GDS(config: RunnableConfig,
@@ -104,7 +108,7 @@ async def Search_Hotels_From_GDS(config: RunnableConfig,
                     return response.get("message")
 
         except httpx.HTTPStatusError:
-            return "We ran into an issue finding hotels for you." 
+            return "we couldn’t complete your hotel search at the moment." 
 
 @tool(name_or_callable="hotel_memory")
 async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
@@ -195,15 +199,15 @@ async def Search_Details_Specific_Hotel(config: RunnableConfig,
                 await save_hotelDetails_room_options(config["configurable"].get("thread_id"), hotel_details, rooms)
                                 
             except Exception as e:
-                return "Error saving hotel details and room options"
+                logging.error(f"Your hotel and room selections couldn’t be saved. Error: {str(e)}")
             
             note = "NOTE: The following rooms are available, doestn't forget to present price and amenties to the user"
     
             return json.dumps(rooms, indent=2)+"\n"+note,
 
         except Exception as e:
-            print("Error during hotel room search:", str(e))
-            return "We’re having trouble fetching room details for this hotel"
+            logging.error("Error during hotel room search:", str(e))
+            return "We couldn’t retrieve the room details right now. Please try again."
             
 
         
@@ -267,6 +271,16 @@ async def send_shortlink_request_hotelBooking(config: RunnableConfig,
 def get_current_date():
     """Returns the current date in 'DD-MM-YYYY' format."""
     return datetime.now().strftime("%d-%m-%Y")
+
+@tool(name_or_callable="hotel_policy_cancellation_informations")
+async def policy_cancellation_informations(config: RunnableConfig):
+    """Retrieves the cancellation and policy informations for a specific hotel as payment  policy."""
+    try:
+        policy_cancellation = await get_policy_cancellation_rules(config["configurable"].get("thread_id"))
+    except Exception as e:
+        return "We’re having trouble retrieving the cancellation policy for this hotel."
+    
+    return json.dumps(policy_cancellation, indent=2)
         
 @tool(name_or_callable="get_hotel_preferences")
 async def get_hotel_preferences(user_id: str):
@@ -282,7 +296,7 @@ async def get_hotel_preferences(user_id: str):
     hotel_preferences = await hotel_pref_model.get_hotelPreferences_perUser(hotel_user_id=user_id)
 
     if not hotel_preferences and not general_preferences:
-        return "No hotel or general preferences found for this user."
+        return "We don’t have any saved hotel preferences right now"
     
     hotel = hotel_preferences.model_dump(by_alias=True, exclude_none=True) if hotel_preferences else "No hotel preferences found for this user."
     general = general_preferences.model_dump(by_alias=True, exclude_none=True) if general_preferences else "No general preferences found for this user."

@@ -1,5 +1,5 @@
 from config.config import settings
-from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, get_current_date, memory_gds_data, send_shortlink_request_hotelBooking
+from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, get_current_date, memory_gds_data, policy_cancellation_informations, send_shortlink_request_hotelBooking
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt.chat_agent_executor import AgentState
@@ -25,6 +25,9 @@ def prompt(state:AgentState) -> list[AnyMessage]:
         "- Ask user to choose one (eg. hotel, fligh, car) or several (eg hotel : room ptions)  for next step (booking, viewing details).",
         "If context is incomplete:",
         "- Retrieve full GDS or payload data from the appropriate memory tool (hotel memory, flight memory, etc.).",
+        "If a tool returns an error or exception:",
+        "- Reformulate the response as a polite, user-friendly message.",
+        "- Do not reveal technical details or internal errors.",
         "If unsure, say you cannot find the information rather than guessing.",
         "Your Response:"
 ])
@@ -34,7 +37,8 @@ tools = [Search_Hotels_From_GDS,
         Search_Details_Specific_Hotel,
         send_shortlink_request_hotelBooking,
         memory_gds_data,
-        get_current_date
+        get_current_date,
+        policy_cancellation_informations
         ]
 
 

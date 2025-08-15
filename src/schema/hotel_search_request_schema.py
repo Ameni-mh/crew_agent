@@ -71,7 +71,6 @@ class HotelSearchRequest(BaseModel):
             checkout_date = datetime.strptime(v, "%d-%m-%Y" ).date()
             today = datetime.now().strftime("%d-%m-%Y")
             today = datetime.strptime(today , "%d-%m-%Y").date()
-            print("today ameni :", today)
             if checkout_date < today:
                 return f"Check-out date {v} cannot be in the past. Today is {datetime.now().strftime('%d-%m-%Y')}"
                 
