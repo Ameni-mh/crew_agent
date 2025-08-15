@@ -106,12 +106,12 @@ async def get_policy_cancellation_rules(convo_id: str) -> str:
     hotelDetails_key = f"hotel_booking:hotelDetails:{convo_id}"
     hotelDetails = await redis.json().get(hotelDetails_key, "$")
 
-    if not hotelDetails or not isinstance(hotelDetails, dict):
+    if not hotelDetails or not isinstance(hotelDetails, list) or len(hotelDetails) == 0 or not isinstance(hotelDetails[0], dict):
         return "No hotel details found for this conversation."
     
     policy_cancellation = {
-        "cancellation_rules": hotelDetails.get("cancellation", "No  policy rules  available."),
-        "policy_rules": hotelDetails.get("cpolicy", "No cancellation rules available."),
+        "cancellation_rules": hotelDetails[0].get("cancellation", "No  policy rules  available."),
+        "policy_rules": hotelDetails[0].get("cpolicy", "No cancellation rules available."),
     }
 
     return json.dumps(policy_cancellation, indent=2)

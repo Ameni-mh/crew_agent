@@ -252,8 +252,9 @@ async def send_shortlink_request_hotelBooking(config: RunnableConfig,
                 
                 context = "\n".join([
                     f"Room option for the hotel **{option}** has been confirmed.",
-                    "You may now present the link and checkout details, including hotel option, room option, room count, and user search information. "
-                    "If any information is missing, retrieve it from the room search payload stored in memory. "
+                    "You may now present the link",
+                    "Keep in mind the checkout details, including hotel option, room option, room count, and user search information.",
+                    "If any information is missing, retrieve it from the room search payload stored in memory. ",
                     "Then, proceed to ask the user if they need additional services, such as booking a flight or re-booking another hotel."
                 ])
                 return Command(update={
@@ -269,7 +270,8 @@ async def send_shortlink_request_hotelBooking(config: RunnableConfig,
         
 @tool(name_or_callable="get_current_date")        
 def get_current_date():
-    """Returns the current date in 'DD-MM-YYYY' format."""
+    """Returns the current date in 'DD-MM-YYYY' format.
+    Use this tool when you need the current date, especially if the user provides a date without specifying the year. """
     return datetime.now().strftime("%d-%m-%Y")
 
 @tool(name_or_callable="hotel_policy_cancellation_informations")
@@ -278,6 +280,7 @@ async def policy_cancellation_informations(config: RunnableConfig):
     try:
         policy_cancellation = await get_policy_cancellation_rules(config["configurable"].get("thread_id"))
     except Exception as e:
+        logger.error(f"Error retrieving cancellation policy: {str(e)}")
         return "We’re having trouble retrieving the cancellation policy for this hotel."
     
     return json.dumps(policy_cancellation, indent=2)
