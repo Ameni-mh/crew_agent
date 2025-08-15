@@ -4,7 +4,6 @@ from langgraph.checkpoint.redis import AsyncRedisSaver
 from langgraph.prebuilt import create_react_agent
 from config.config import settings
 from Agent.lookup_hotels import  model, prompt,  summarization_node
-from langgraph.store.redis.aio import AsyncRedisStore
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from contextlib import asynccontextmanager

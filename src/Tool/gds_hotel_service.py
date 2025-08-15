@@ -246,8 +246,12 @@ async def send_shortlink_request_hotelBooking(config: RunnableConfig,
                 if not link:
                     return "We’re having trouble creating a booking link."
                 
-                context= "\n".join([f"Room option for the hotel **{option}** has been confirmed.",
-                            "You may now present link and proceed by asking the user about other needs, such as flight booking or re-booking another hotel."])
+                context = "\n".join([
+                    f"Room option for the hotel **{option}** has been confirmed.",
+                    "You may now present the link and checkout details, including hotel option, room option, room count, and user search information. "
+                    "If any information is missing, retrieve it from the room search payload stored in memory. "
+                    "Then, proceed to ask the user if they need additional services, such as booking a flight or re-booking another hotel."
+                ])
                 return Command(update={
                         "messages": [
                             ToolMessage(

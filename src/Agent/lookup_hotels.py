@@ -2,7 +2,6 @@ from config.config import settings
 from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, get_current_date, memory_gds_data, send_shortlink_request_hotelBooking
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import AnyMessage
-from langchain_core.runnables import RunnableConfig
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from langmem.short_term import SummarizationNode
 from langchain_core.messages.utils import count_tokens_approximately
@@ -12,7 +11,7 @@ from langchain_core.messages.utils import count_tokens_approximately
 
 model = ChatOpenAI(model="gpt-4o", temperature=0.0, api_key=settings.openai_api_key)
 
-def prompt(state:AgentState, config: RunnableConfig) -> list[AnyMessage]: 
+def prompt(state:AgentState) -> list[AnyMessage]: 
 
     system_msg = "\n".join([
         "You are Vialink’s advanced customer support assistant. Provide accurate, concise help on bookings, company policies, and related services.",

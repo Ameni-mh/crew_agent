@@ -49,7 +49,7 @@ class HotelSearchRequest(BaseModel):
         """Validate that check-in date is not in the past"""
         try:
             # Parse the date string
-            checkin_date = datetime.strptime(v, "%d-%m-%Y").date()
+            checkin_date = datetime.strptime(v, "%d-%m-%Y" ).date()
             today = datetime.now().strftime("%d-%m-%Y")
             today = datetime.strptime(today , "%d-%m-%Y").date()
             
@@ -68,8 +68,8 @@ class HotelSearchRequest(BaseModel):
         """Validate that checkout date is not in the past"""
         try:
             # Parse the date string
-            checkout_date = datetime.strptime(v, "%d-%m-%Y").date()
-            today = datetime.now().date()
+            checkout_date = datetime.strptime(v, "%d-%m-%Y" ).date()
+            today = datetime.now().strftime("%d-%m-%Y")
             today = datetime.strptime(today , "%d-%m-%Y").date()
             print("today ameni :", today)
             if checkout_date < today:
