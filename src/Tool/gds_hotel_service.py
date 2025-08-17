@@ -138,8 +138,8 @@ async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
     
     return "\n".join(memory)
 
-@tool()
-def get_checkout_details(checkoutDetails : CheckoutDetails) -> str:
+@tool("get_checkout_details")
+def get_checkout_details(state: Annotated[AgentContext, InjectedState]) -> str:
     """
     Retrieves the checkout details for the hotel booking.
     
@@ -147,8 +147,17 @@ def get_checkout_details(checkoutDetails : CheckoutDetails) -> str:
     Returns:
         str: A string representation of the checkout details.
     """
-    checkout =  checkoutDetails.model_dump(by_alias=True, exclude_none=True)
-    return json.dumps(checkout, indent=2)
+    if state["checkout_details"]:
+        checkout = json.dumps(state["checkout_details"], indent=2)
+    if state["room_search_payload"]:
+        hotel_search_info = json.dumps(state["room_search_payload"], indent=2)
+
+    if not state["checkout_details"] and not state["room_search_payload"]:
+        return "No checkout details available yet."
+    
+    return f"Checkout Details: \n{checkout}\n\nHotel Search Information: \n{hotel_search_info}"
+    
+
         
 @tool(name_or_callable="look_up_rooms_for_Hotel_Selected")
 async def Search_Details_Specific_Hotel(config: RunnableConfig, 
@@ -225,11 +234,12 @@ async def Search_Details_Specific_Hotel(config: RunnableConfig,
 
         
 @tool(name_or_callable="Room_Booking_Confirmation")
-async def send_shortlink_request_hotelBooking(config: RunnableConfig,
+async def send_shortlink_request_hotelBooking(config: RunnableConfig, CheckoutDetails: CheckoutDetails,
                                               option: int, tool_call_id: Annotated[str, InjectedToolCallId]) :
         """ Generates a short booking link for a selected hotel via the GDS API, triggered when the user confirms their room selection.
         Arguments: 
             config(RunnableConfig): have account and conversation id.
+            checkoutDetails (CheckoutDetails): Contains the hotel ID, hotel name, room option, and room count.
             option (int): Index corresponding to the selected hotel option.
             tool_call_id (str): Identifier for this tool call
         Returns: A Command representing the generated short booking link and updated agent state."""
@@ -270,6 +280,7 @@ async def send_shortlink_request_hotelBooking(config: RunnableConfig,
                     "Then, proceed to ask the user if they need additional services, such as booking a flight or re-booking another hotel."
                 ])
                 return Command(update={
+                        "checkout_details": CheckoutDetails.model_dump(by_alias=True, exclude_none=True),
                         "messages": [
                             ToolMessage(
                                 context+"\n"+link,

@@ -1,5 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
+
+class RoomOption(BaseModel):
+    room_name: str = Field(..., description="The name of the room option.")
+    count: int = Field(..., ge=1, description="The number of rooms booked.")
 
 class CheckoutDetails(BaseModel):
     """
@@ -7,5 +11,5 @@ class CheckoutDetails(BaseModel):
     """
     hotel_id: str = Field(..., description="The unique identifier for the hotel.")
     hotel_name: str = Field(..., description="The name of the hotel.")
-    room_option: str = Field(..., description="The selected room option for the booking.")
-    room_count: int = Field(..., ge=1, description="The number of rooms booked.")
+    room_options: List[RoomOption] = Field(..., description="The selected room option for the booking.")
+    

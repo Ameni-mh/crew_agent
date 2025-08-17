@@ -18,16 +18,16 @@ from model.db_schemas.travel_base import SQLAlchemyBase
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    postgres_conn = f"postgresql+asyncpg://{settings.postgres_username}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_main_database}"
-    app.db_engine = create_async_engine(postgres_conn, echo=True)
-    app.db_client = sessionmaker(
-        app.db_engine, class_=AsyncSession, expire_on_commit=False
-    )
+    #postgres_conn = f"postgresql+asyncpg://{settings.postgres_username}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_main_database}"
+    #app.db_engine = create_async_engine(postgres_conn, echo=True)
+    #app.db_client = sessionmaker(
+        #app.db_engine, class_=AsyncSession, expire_on_commit=False
+    #)
 
-    async with app.db_engine.begin() as conn:
-        print("Creating database tables...")
-        await conn.run_sync(SQLAlchemyBase.metadata.create_all)
-        print("✅ Database tables created successfully!")    
+    #async with app.db_engine.begin() as conn:
+        #print("Creating database tables...")
+        #await conn.run_sync(SQLAlchemyBase.metadata.create_all)
+        #print("✅ Database tables created successfully!")    
 
     os.environ["REDIS_URL"] = settings.redis_url
     async with  AsyncRedisSaver.from_conn_string(settings.redis_url) as checkpointer:
@@ -50,4 +50,4 @@ app = FastAPI(lifespan=lifespan)
 
 
 app.include_router(hotel_router)
-app.include_router(data_router)
+#app.include_router(data_router)

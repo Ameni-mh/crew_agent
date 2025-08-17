@@ -11,6 +11,7 @@ class AgentContext(AgentState):
     context: Optional[dict[str, RunningSummary]]
     hotels: Optional[str] 
     room_search_payload: Optional[dict] 
+    checkout_details: Optional[dict] 
 
              
              
