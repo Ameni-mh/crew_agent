@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 from fastapi import Request
 import httpx
 import uvicorn
+from schema.checkout_details import CheckoutDetails
 from schema.hotel_search_request_schema import HotelSearchRequest
 import json
 from config.config import settings
@@ -136,6 +137,18 @@ async def memory_gds_data(state: Annotated[AgentContext, InjectedState]
          return "No memory of any list yet"
     
     return "\n".join(memory)
+
+@tool()
+def get_checkout_details(checkoutDetails : CheckoutDetails) -> str:
+    """
+    Retrieves the checkout details for the hotel booking.
+    
+    This tool is used to access the checkout information, including hotel ID, room option, room count, and any user search information.
+    Returns:
+        str: A string representation of the checkout details.
+    """
+    checkout =  checkoutDetails.model_dump(by_alias=True, exclude_none=True)
+    return json.dumps(checkout, indent=2)
         
 @tool(name_or_callable="look_up_rooms_for_Hotel_Selected")
 async def Search_Details_Specific_Hotel(config: RunnableConfig, 
@@ -162,33 +175,33 @@ async def Search_Details_Specific_Hotel(config: RunnableConfig,
             response.raise_for_status()
             response = response.json()
 
-            response_pydantic = HotelDetailsRequestOutput(**response)
+            #response_pydantic = HotelDetailsRequestOutput(**response)
 
             hotel_details = { 
-            "id": response_pydantic.id,
-            "name": response_pydantic.name,
-            "city": response_pydantic.city,
-            "country": response_pydantic.country,
-            "address": response_pydantic.address,
-            "stars": response_pydantic.stars,
-            "ratings": response_pydantic.ratings,
-            "longitude": response_pydantic.longitude,
-            "latitude": response_pydantic.latitude,
-            "desc": response_pydantic.desc,
-            "img": response_pydantic.img,
-            "amenities": response_pydantic.amenities,
-            "supplier_name": response_pydantic.supplier_name,
-            "supplier_id": response_pydantic.supplier_id,
-            "checkin": response_pydantic.checkin,
-            "checkout": response_pydantic.checkout,
-            "policy": response_pydantic.policy,
-            "booking_age_requirement": response_pydantic.booking_age_requirement,
-            "cancellation": response_pydantic.cancellation,
-            "tax_percentage": response_pydantic.tax_percentage,
-            "hotel_phone": response_pydantic.hotel_phone,
-            "hotel_email": response_pydantic.hotel_email,
-            "hotel_website": response_pydantic.hotel_website,
-            "discount": response_pydantic.discount,
+            "id": response.get("id"),
+            "name": response.get("name"),
+            "city": response.get("city"),
+            "country": response.get("country"),
+            "address": response.get("address"),
+            "stars": response.get("stars"),
+            "ratings": response.get("ratings"),
+            "longitude": response.get("longitude"),
+            "latitude": response.get("latitude"),
+            "desc": response.get("desc"),
+            "img": response.get("img"),
+            "amenities": response.get("amenities"),
+            "supplier_name": response.get("supplier_name"),
+            "supplier_id": response.get("supplier_id"),
+            "checkin": response.get("checkin"),
+            "checkout": response.get("checkout"),
+            "policy": response.get("policy"),
+            "booking_age_requirement": response.get("booking_age_requirement"),
+            "cancellation": response.get("cancellation"),
+            "tax_percentage": response.get("tax_percentage"),
+            "hotel_phone": response.get("hotel_phone"),
+            "hotel_email": response.get("hotel_email"),
+            "hotel_website": response.get("hotel_website"),
+            "discount": response.get("discount"),
         }
 
             #rooms_options = []
@@ -251,7 +264,6 @@ async def send_shortlink_request_hotelBooking(config: RunnableConfig,
                     return "We’re having trouble creating a booking link."
                 
                 context = "\n".join([
-                    f"Room option for the hotel **{option}** has been confirmed.",
                     "You may now present the link",
                     "Keep in mind the checkout details, including hotel option, room option, room count, and user search information.",
                     "If any information is missing, retrieve it from the room search payload stored in memory. ",
@@ -276,7 +288,13 @@ def get_current_date():
 
 @tool(name_or_callable="hotel_policy_cancellation_informations")
 async def policy_cancellation_informations(config: RunnableConfig):
-    """Retrieves the cancellation and policy informations for a specific hotel as payment  policy."""
+    """
+    Retrieves a hotel's cancellation policy and general rules. 
+    Use this tool when the user asks about:
+      - Cancellation conditions (refunds, deadlines, penalties).
+      - Payment policies (accepted payment methods, deposit requirements).
+      - General stay policies (e.g., if visitors are allowed in the room).
+    """
     try:
         policy_cancellation = await get_policy_cancellation_rules(config["configurable"].get("thread_id"))
     except Exception as e:

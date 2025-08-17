@@ -1,5 +1,5 @@
 from config.config import settings
-from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, get_current_date, memory_gds_data, policy_cancellation_informations, send_shortlink_request_hotelBooking
+from Tool.gds_hotel_service import Search_Details_Specific_Hotel, Search_Hotels_From_GDS, get_checkout_details, get_current_date, memory_gds_data, policy_cancellation_informations, send_shortlink_request_hotelBooking
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import AnyMessage
 from langgraph.prebuilt.chat_agent_executor import AgentState
@@ -38,7 +38,8 @@ tools = [Search_Hotels_From_GDS,
         send_shortlink_request_hotelBooking,
         memory_gds_data,
         get_current_date,
-        policy_cancellation_informations
+        policy_cancellation_informations,
+        get_checkout_details
         ]
 
 

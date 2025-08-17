@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RoomOption(BaseModel):
@@ -10,7 +10,8 @@ class RoomOption(BaseModel):
     markup_price: str
     markup_price_per_night: str
     service_fee: int
-    quantity: int
+    quantity: int = Field(default=None, ge=1, description="Number of options available")
+    refundable: str
     adults: int
     child: int
     children_ages: str
